@@ -7,7 +7,9 @@ import 'routes/app_pages.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp();
+
   Get.put(AuthController(), permanent: true);
 
   runApp(const MyApp());
@@ -20,8 +22,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: Routes.SPLASH,
+
+      initialRoute: AppPages.INITIAL,
+
       getPages: AppPages.pages,
+
+      smartManagement: SmartManagement.full,
+
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: Colors.blue,
@@ -29,4 +36,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../routes/app_pages.dart';
@@ -17,11 +16,12 @@ void initState() {
   super.initState();
 
   Future.delayed(const Duration(seconds: 2), () {
-  if (!mounted) return;
-  Get.offNamed(Routes.LOGIN);
-});
+    if (mounted) {
+      Get.offAllNamed(Routes.LOGIN);
+    }
+  });
 }
-
+  
 
   @override
   Widget build(BuildContext context) {

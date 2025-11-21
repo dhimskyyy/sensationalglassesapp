@@ -71,6 +71,8 @@ class _RegisterPageState extends State<RegisterPage> {
         "createdAt": DateTime.now(),
       });
 
+      await FirebaseAuth.instance.signOut();
+
       Get.offAllNamed('/login');
 
       Get.snackbar(
