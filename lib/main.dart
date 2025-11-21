@@ -8,8 +8,6 @@ import 'routes/app_pages.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-
-  // REGISTER CONTROLLERS DI SINI SAJA
   Get.put(AuthController(), permanent: true);
 
   runApp(const MyApp());

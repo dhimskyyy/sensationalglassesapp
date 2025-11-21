@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 
-
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -63,7 +62,9 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Get.toNamed('/register');
+                      },
                       child: const Text(
                         'Daftar',
                         style: TextStyle(
@@ -91,7 +92,10 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       const SizedBox(height: 24),
 
-                      const Text('Email', style: TextStyle(color: Color(0xFF2A274B))),
+                      const Text(
+                        'Email',
+                        style: TextStyle(color: Color(0xFF2A274B)),
+                      ),
                       const SizedBox(height: 8),
 
                       TextFormField(
@@ -180,7 +184,11 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           child: const Text(
                             'Masuk',
-                            style: TextStyle(fontSize: 18, color: Colors.white,fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
@@ -214,46 +222,46 @@ class _LoginPageState extends State<LoginPage> {
 
                       Row(
                         children: [
-Expanded(
-  child: OutlinedButton(
-    onPressed: () {
-      Get.find<AuthController>().signInWithGoogle();
-    },
-    style: OutlinedButton.styleFrom(
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      side: BorderSide(color: Colors.grey.shade200),
-      padding: const EdgeInsets.symmetric(
-        vertical: 12,
-      ),
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset(
-          "assets/google.png",
-          width: 20,
-          height: 20,
-        ),
-        const SizedBox(width: 10),
-        const Text(
-          'Google',
-          style: TextStyle(color: Colors.black),
-        ),
-      ],
-    ),
-  ),
-),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Get.find<AuthController>().signInWithGoogle();
+                              },
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                side: BorderSide(color: Colors.grey.shade200),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    "assets/google.png",
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Text(
+                                    'Google',
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
 
                           const SizedBox(width: 12),
 
                           Expanded(
                             child: OutlinedButton(
                               onPressed: () {
-  Get.find<AuthController>().signInWithFacebook();
-},
+                                Get.find<AuthController>().signInWithFacebook();
+                              },
                               style: OutlinedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(

@@ -34,7 +34,7 @@
     </array>
 
     <!-- GOOGLE CLIENT ID -->
-    <key>GIDClientID</key>
+    <key>CLIENT_ID</key>
     <string>745404063740-t22alce9affjoa2s3m7ga2j7o6c12j7c.apps.googleusercontent.com</string>
 
     <!-- FACEBOOK - OPEN URL -->
