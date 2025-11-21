@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "745404063740",
+    "project_id": "sensationalapp-111fc",
+    "storage_bucket": "sensationalapp-111fc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:745404063740:android:b09dd3316865619303dc79",
+        "android_client_info": {
+          "package_name": "com.example.sensationalglassesapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "745404063740-3nvigrf2f62apngpjoic1bakds7ot0pn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sensationalglassesapp",
+            "certificate_hash": "0fdbd9d41d4e16fef6038e8cbd40e260d891d414"
+          }
+        },
+        {
+          "client_id": "745404063740-8302h92tdt37dkvsk0scjdvfg03oes5e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-RvkLiIDeriLz2hKqdVoHegopkjrt9l4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "745404063740-8302h92tdt37dkvsk0scjdvfg03oes5e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
