@@ -33,6 +33,16 @@ class AuthController extends GetxController {
   });
 }
 
+void signInWithEmailAndPassword(String email, String password) async {
+  try {
+    await _auth.signInWithEmailAndPassword(email: email, password: password);
+    Get.offAllNamed(Routes.HOME);
+  } catch (e) {
+    Get.snackbar("Login gagal", e.toString());
+  }
+}
+
+
   // ================== GOOGLE LOGIN ==================
   Future<void> signInWithGoogle() async {
     try {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -21,29 +23,70 @@ class _RegisterPageState extends State<RegisterPage> {
 
   String? completePhoneNumber;
 
-  // ============= DATE PICKER =============
+  // DATE PICKER
   Future<void> pickDate() async {
     DateTime? result = await showDatePicker(
       context: context,
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
-      initialDate: DateTime.now(), // Tanggal muncul default = hari ini
+      initialDate: DateTime.now(),
     );
     if (result != null) {
       birthDate.text = DateFormat('dd/MM/yyyy').format(result);
     }
   }
 
-  // ============= VALIDASI PASSWORD =============
-  bool isValidPassword(String password) {
-    final regex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*[\d\W]).+$');
-    return regex.hasMatch(password);
-  }
-
-  // ============= VALIDASI EMAIL =============
+  // EMAIL VALIDATION
   bool isValidEmail(String email) {
     final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     return regex.hasMatch(email);
+  }
+
+  // PASSWORD VALIDATION
+  bool isValidPassword(String pass) {
+    final regex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*[\d\W]).+$');
+    return regex.hasMatch(pass);
+  }
+
+  // FIREBASE REGISTER + SAVE TO FIRESTORE
+  Future<void> registerUser() async {
+    try {
+      // ===================== AUTH =====================
+      UserCredential userCred =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email.text.trim(),
+        password: password.text.trim(),
+      );
+
+      String uid = userCred.user!.uid;
+
+      // =================== FIRESTORE ===================
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        "uid": uid,
+        "firstName": firstName.text.trim(),
+        "lastName": lastName.text.trim(),
+        "email": email.text.trim(),
+        "birthDate": birthDate.text.trim(),
+        "phone": completePhoneNumber,
+        "createdAt": DateTime.now(),
+      });
+
+      Get.offAllNamed('/login');
+
+      Get.snackbar(
+        "Berhasil",
+        "Akun berhasil dibuat",
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } on FirebaseAuthException catch (e) {
+      Get.snackbar(
+        "Error",
+        e.message ?? "Terjadi kesalahan",
+        backgroundColor: Colors.red.withOpacity(0.85),
+        colorText: Colors.white,
+      );
+    }
   }
 
   @override
@@ -52,6 +95,7 @@ class _RegisterPageState extends State<RegisterPage> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
+          // BACKGROUND MINT
           Container(height: 500, color: const Color(0xFF74C9B6)),
 
           SafeArea(
@@ -91,7 +135,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             color: Color(0xFF2A274B),
                             fontSize: 36,
                             fontWeight: FontWeight.w800,
-                            height: 1.02,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -99,10 +142,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           children: [
                             const Text(
                               'Sudah Punya Akun?',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
+                              style: TextStyle(color: Colors.white, fontSize: 14),
                             ),
                             const SizedBox(width: 8),
                             GestureDetector(
@@ -125,7 +165,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 20),
 
-                  // ================= WHITE FORM =================
+                  // WHITE FORM CONTAINER
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(30, 38, 30, 20),
@@ -138,17 +178,15 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // FIRST & LAST NAME
+                        // NAME ROW
                         Row(
                           children: [
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    "Nama Depan",
-                                    style: TextStyle(color: Color(0xFF2A274B)),
-                                  ),
+                                  const Text("Nama Depan",
+                                      style: TextStyle(color: Color(0xFF2A274B))),
                                   const SizedBox(height: 8),
                                   TextFormField(
                                     controller: firstName,
@@ -162,10 +200,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    "Nama Belakang",
-                                    style: TextStyle(color: Color(0xFF2A274B)),
-                                  ),
+                                  const Text("Nama Belakang",
+                                      style: TextStyle(color: Color(0xFF2A274B))),
                                   const SizedBox(height: 8),
                                   TextFormField(
                                     controller: lastName,
@@ -180,10 +216,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 18),
 
                         // EMAIL
-                        const Text(
-                          "Email",
-                          style: TextStyle(color: Color(0xFF2A274B)),
-                        ),
+                        const Text("Email",
+                            style: TextStyle(color: Color(0xFF2A274B))),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: email,
@@ -193,10 +227,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 18),
 
                         // BIRTHDATE
-                        const Text(
-                          "Birth of date",
-                          style: TextStyle(color: Color(0xFF2A274B)),
-                        ),
+                        const Text("Birth of date",
+                            style: TextStyle(color: Color(0xFF2A274B))),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: birthDate,
@@ -204,10 +236,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           onTap: pickDate,
                           decoration: _inputDecoration().copyWith(
                             suffixIcon: IconButton(
-                              icon: Icon(
-                                Icons.calendar_month,
-                                color: Colors.grey.shade600,
-                              ),
+                              icon: Icon(Icons.calendar_month,
+                                  color: Colors.grey.shade600),
                               onPressed: pickDate,
                             ),
                           ),
@@ -215,11 +245,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         const SizedBox(height: 18),
 
-                        // PHONE NUMBER
-                        const Text(
-                          "Phone Number",
-                          style: TextStyle(color: Color(0xFF2A274B)),
-                        ),
+                        // PHONE
+                        const Text("Phone Number",
+                            style: TextStyle(color: Color(0xFF2A274B))),
                         const SizedBox(height: 8),
 
                         IntlPhoneField(
@@ -241,27 +269,19 @@ class _RegisterPageState extends State<RegisterPage> {
                                 width: 1.6,
                               ),
                             ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
                           ),
                           initialCountryCode: 'ID',
-                          onChanged: (p) {
-                            completePhoneNumber = p.completeNumber;
-                          },
-                          onCountryChanged: (c) {
-                            completePhoneNumber = null;
-                          },
+                          onChanged: (p) => completePhoneNumber = p.completeNumber,
+                          onCountryChanged: (c) => completePhoneNumber = null,
                         ),
 
                         const SizedBox(height: 18),
 
                         // PASSWORD
-                        const Text(
-                          "Set Password",
-                          style: TextStyle(color: Color(0xFF2A274B)),
-                        ),
+                        const Text("Set Password",
+                            style: TextStyle(color: Color(0xFF2A274B))),
                         const SizedBox(height: 8),
+
                         TextFormField(
                           controller: password,
                           obscureText: hidePass,
@@ -273,11 +293,9 @@ class _RegisterPageState extends State<RegisterPage> {
                                     : Icons.visibility_outlined,
                                 color: const Color(0xFF2A274B),
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  hidePass = !hidePass;
-                                });
-                              },
+                              onPressed: () => setState(() {
+                                hidePass = !hidePass;
+                              }),
                             ),
                           ),
                         ),
@@ -293,10 +311,9 @@ class _RegisterPageState extends State<RegisterPage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              elevation: 0,
                             ),
                             onPressed: () {
-                              // ============== VALIDASI KOSONG ==============
+                              // VALIDATION
                               if (firstName.text.isEmpty ||
                                   lastName.text.isEmpty ||
                                   email.text.isEmpty ||
@@ -305,62 +322,34 @@ class _RegisterPageState extends State<RegisterPage> {
                                   (completePhoneNumber?.isEmpty ?? true)) {
                                 Get.snackbar(
                                   "Form Tidak Lengkap",
-                                  "Harap isi semua data sebelum melanjutkan",
+                                  "Harap isi semua data.",
                                   backgroundColor: Colors.red.withOpacity(0.85),
                                   colorText: Colors.white,
                                 );
                                 return;
                               }
 
-                              // ============== VALIDASI NOMOR TELEPON ==============
-                              if (completePhoneNumber == null ||
-                                  completePhoneNumber!.isEmpty) {
-                                Get.snackbar(
-                                  "Nomor Telepon Tidak Valid",
-                                  "Harap masukkan nomor telepon yang benar.",
-                                  backgroundColor: Colors.red.withOpacity(0.85),
-                                  colorText: Colors.white,
-                                );
-                                return;
-                              }
-
-                              // Validasi panjang nomor
-                              if (phone.text.length < 9 ||
-                                  phone.text.length > 13) {
-                                Get.snackbar(
-                                  "Nomor Telepon Tidak Valid",
-                                  "Harap masukkan nomor telepon yang benar.",
-                                  backgroundColor: Colors.red.withOpacity(0.85),
-                                  colorText: Colors.white,
-                                );
-                                return;
-                              }
-
-                              // ============== VALIDASI EMAIL ==============
                               if (!isValidEmail(email.text)) {
                                 Get.snackbar(
                                   "Email Tidak Valid",
-                                  "Format email harus benar, contoh: email@example.com",
+                                  "Masukkan email yang benar.",
                                   backgroundColor: Colors.red.withOpacity(0.85),
                                   colorText: Colors.white,
                                 );
                                 return;
                               }
 
-                              // ============== VALIDASI PASSWORD ==============
                               if (!isValidPassword(password.text)) {
                                 Get.snackbar(
-                                  "Password Tidak Valid",
-                                  "Password harus mengandung huruf besar, huruf kecil, dan angka/simbol.",
+                                  "Password Lemah",
+                                  "Harus ada huruf besar, kecil, angka/simbol.",
                                   backgroundColor: Colors.red.withOpacity(0.85),
                                   colorText: Colors.white,
                                 );
                                 return;
                               }
 
-                              print(
-                                "SEMUA DATA VALID — REGISTRASI BERHASIL 🎉",
-                              );
+                              registerUser(); // 🔥 REGISTER + SAVE FIRESTORE
                             },
                             child: const Text(
                               "Daftar",
@@ -384,7 +373,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // Reusable decoration
+  // INPUT DECORATION
   InputDecoration _inputDecoration() {
     return InputDecoration(
       filled: true,
