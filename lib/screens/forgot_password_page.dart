@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
+import '../app/theme/app_colors.dart';
+import '../app/theme/app_text_styles.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -10,8 +12,6 @@ class ForgotPasswordPage extends StatefulWidget {
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  static const Color mint = Color(0xFF70CAB0);
-  static const Color dark = Color(0xFF071836);
   final TextEditingController emailController = TextEditingController();
   bool _isLoading = false;
 
@@ -21,7 +21,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          Container(height: 500, color: mint),
+          Container(height: 500, color: AppColors.mint),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,7 +38,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           const Text(
                             'Sensational Glasses',
                             style: TextStyle(
-                              color: Color(0xFF2A274B),
+                              color: AppColors.dark,
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                             ),
@@ -49,7 +49,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       const Text(
                         'Lupa Password?',
                         style: TextStyle(
-                          color: Color(0xFF2A274B),
+                          color: AppColors.dark,
                           fontSize: 36,
                           fontWeight: FontWeight.w800,
                           height: 1.02,
@@ -79,10 +79,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       children: [
                         const Text(
                           'Email',
-                          style: TextStyle(
-                            color: Color(0xFF2A274B),
-                            fontSize: 13,
-                          ),
+                          style: AppTextStyles.label,
                         ),
                         const SizedBox(height: 6),
                         TextFormField(
@@ -102,7 +99,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                       Get.snackbar(
                                         "Error",
                                         "Masukkan email Anda",
-                                        backgroundColor: Colors.red,
+                                        backgroundColor: AppColors.error,
                                         colorText: Colors.white,
                                       );
                                       return;
@@ -115,7 +112,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                     setState(() => _isLoading = false);
                                   },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: mint,
+                              backgroundColor: AppColors.mint,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -147,9 +144,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             child: const Text(
                               'Kembali ke Login',
                               style: TextStyle(
-                                color: mint,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                                color: AppColors.mint,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),

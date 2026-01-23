@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../app/theme/app_colors.dart';
+import '../app/theme/app_text_styles.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -13,6 +15,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+
   final TextEditingController firstName = TextEditingController();
   final TextEditingController lastName = TextEditingController();
   final TextEditingController email = TextEditingController();
@@ -51,16 +54,19 @@ class _RegisterPageState extends State<RegisterPage> {
   // FIREBASE REGISTER + SAVE TO FIRESTORE
   Future<void> registerUser() async {
     try {
-      // ===================== AUTH =====================
-      UserCredential userCred =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email.text.trim(),
-        password: password.text.trim(),
-      );
+      // 1. Create User di Auth
+      UserCredential userCred = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: email.text.trim(),
+            password: password.text.trim(),
+          );
 
       String uid = userCred.user!.uid;
+      
+      // Simulasi generate OTP
+      String dummyOtp = "123456"; 
 
-      // =================== FIRESTORE ===================
+      // 2. Simpan ke Firestore
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
         "uid": uid,
         "firstName": firstName.text.trim(),
@@ -69,18 +75,27 @@ class _RegisterPageState extends State<RegisterPage> {
         "birthDate": birthDate.text.trim(),
         "phone": completePhoneNumber,
         "createdAt": DateTime.now(),
+        "is_verified": false, // PENTING: Set belum verifikasi
+        "otp_code": dummyOtp, // Simpan OTP di database
       });
 
-      await FirebaseAuth.instance.signOut();
+      // Hapus baris ini agar user tetap login saat pindah ke halaman verifikasi
+      // await FirebaseAuth.instance.signOut(); 
 
-      Get.offAllNamed('/login');
+      // 3. NAVIGASI KE VERIFICATION PAGE
+      // Kita kirim email sebagai argument
+      Get.toNamed('/verification-page', arguments: email.text.trim()); 
+      
+      // Atau jika menggunakan class langsung:
+      // Get.to(() => const VerificationPage(email: email.text.trim()));
 
       Get.snackbar(
         "Berhasil",
-        "Akun berhasil dibuat",
+        "Kode OTP telah dikirim ke email Anda",
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
+      
     } on FirebaseAuthException catch (e) {
       Get.snackbar(
         "Error",
@@ -98,7 +113,7 @@ class _RegisterPageState extends State<RegisterPage> {
       body: Stack(
         children: [
           // BACKGROUND MINT
-          Container(height: 500, color: const Color(0xFF74C9B6)),
+          Container(height: 500, color: AppColors.mint),
 
           SafeArea(
             child: SingleChildScrollView(
@@ -144,7 +159,10 @@ class _RegisterPageState extends State<RegisterPage> {
                           children: [
                             const Text(
                               'Sudah Punya Akun?',
-                              style: TextStyle(color: Colors.white, fontSize: 14),
+                              style: TextStyle(
+                                color: AppColors.white,
+                                fontSize: 14,
+                              ),
                             ),
                             const SizedBox(width: 8),
                             GestureDetector(
@@ -155,7 +173,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   decoration: TextDecoration.underline,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
-                                  color: Color(0xFF1C2340),
+                                  color: AppColors.dark,
                                 ),
                               ),
                             ),
@@ -187,8 +205,10 @@ class _RegisterPageState extends State<RegisterPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text("Nama Depan",
-                                      style: TextStyle(color: Color(0xFF2A274B))),
+                                  const Text(
+                                    "Nama Depan",
+                                    style: AppTextStyles.label,
+                                  ),
                                   const SizedBox(height: 8),
                                   TextFormField(
                                     controller: firstName,
@@ -202,8 +222,10 @@ class _RegisterPageState extends State<RegisterPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text("Nama Belakang",
-                                      style: TextStyle(color: Color(0xFF2A274B))),
+                                  const Text(
+                                    "Nama Belakang",
+                                    style: AppTextStyles.label,
+                                  ),
                                   const SizedBox(height: 8),
                                   TextFormField(
                                     controller: lastName,
@@ -218,8 +240,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 18),
 
                         // EMAIL
-                        const Text("Email",
-                            style: TextStyle(color: Color(0xFF2A274B))),
+                        const Text(
+                          "Email",
+                          style: AppTextStyles.label,
+                        ),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: email,
@@ -229,8 +253,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 18),
 
                         // BIRTHDATE
-                        const Text("Birth of date",
-                            style: TextStyle(color: Color(0xFF2A274B))),
+                        const Text(
+                          "Tanggal Lahir",
+                          style: AppTextStyles.label,
+                        ),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: birthDate,
@@ -238,8 +264,10 @@ class _RegisterPageState extends State<RegisterPage> {
                           onTap: pickDate,
                           decoration: _inputDecoration().copyWith(
                             suffixIcon: IconButton(
-                              icon: Icon(Icons.calendar_month,
-                                  color: Colors.grey.shade600),
+                              icon: Icon(
+                                Icons.calendar_month,
+                                color: Colors.grey.shade600,
+                              ),
                               onPressed: pickDate,
                             ),
                           ),
@@ -248,8 +276,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 18),
 
                         // PHONE
-                        const Text("Phone Number",
-                            style: TextStyle(color: Color(0xFF2A274B))),
+                        const Text(
+                          "Nomor Telepon",
+                          style: AppTextStyles.label,
+                        ),
                         const SizedBox(height: 8),
 
                         IntlPhoneField(
@@ -273,15 +303,18 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                           ),
                           initialCountryCode: 'ID',
-                          onChanged: (p) => completePhoneNumber = p.completeNumber,
+                          onChanged: (p) =>
+                              completePhoneNumber = p.completeNumber,
                           onCountryChanged: (c) => completePhoneNumber = null,
                         ),
 
                         const SizedBox(height: 18),
 
                         // PASSWORD
-                        const Text("Set Password",
-                            style: TextStyle(color: Color(0xFF2A274B))),
+                        const Text(
+                          "Password",
+                          style: AppTextStyles.label,
+                        ),
                         const SizedBox(height: 8),
 
                         TextFormField(
@@ -293,7 +326,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 hidePass
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: const Color(0xFF2A274B),
+                                color: AppColors.dark,
                               ),
                               onPressed: () => setState(() {
                                 hidePass = !hidePass;
@@ -306,7 +339,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         // BUTTON
                         SizedBox(
-                          height: 56,
+                          height: 48,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF74C9B6),
@@ -325,8 +358,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                 Get.snackbar(
                                   "Form Tidak Lengkap",
                                   "Harap isi semua data.",
-                                  backgroundColor: Colors.red.withOpacity(0.85),
-                                  colorText: Colors.white,
+                                  backgroundColor: AppColors.error,
+                                  colorText: AppColors.white,
                                 );
                                 return;
                               }
@@ -335,8 +368,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                 Get.snackbar(
                                   "Email Tidak Valid",
                                   "Masukkan email yang benar.",
-                                  backgroundColor: Colors.red.withOpacity(0.85),
-                                  colorText: Colors.white,
+                                  backgroundColor: AppColors.error,
+                                  colorText: AppColors.white,
                                 );
                                 return;
                               }
@@ -344,9 +377,9 @@ class _RegisterPageState extends State<RegisterPage> {
                               if (!isValidPassword(password.text)) {
                                 Get.snackbar(
                                   "Password Lemah",
-                                  "Harus ada huruf besar, kecil, angka/simbol.",
-                                  backgroundColor: Colors.red.withOpacity(0.85),
-                                  colorText: Colors.white,
+                                  "Minimal 8 Karaket dan harus ada kombinasi huruf besar, kecil, angka/simbol.",
+                                  backgroundColor: AppColors.error,
+                                  colorText: AppColors.white,
                                 );
                                 return;
                               }
@@ -356,10 +389,41 @@ class _RegisterPageState extends State<RegisterPage> {
                             child: const Text(
                               "Daftar",
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        Center(
+                          child: RichText(
+                            textAlign: TextAlign.center,
+                            text: const TextSpan(
+                              text: 'Dengan mendaftar, Anda menyetujui ',
+                              style: TextStyle(color: AppColors.dark, fontSize: 13),
+                              children: [
+                                TextSpan(
+                                  text: 'Persyaratan\n',
+                                  style: TextStyle(
+                                    color: AppColors.mint,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: 'Layanan dan ',
+                                  style: TextStyle(color: AppColors.dark),
+                                ),
+                                TextSpan(
+                                  text: 'Perjanjian Pemrosesan Data',
+                                  style: TextStyle(
+                                    color: AppColors.mint,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import '../routes/app_pages.dart';
-
+import '../app/routes/app_pages.dart';
+import '../app/theme/app_colors.dart';
+import '../app/theme/app_text_styles.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,8 +13,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  static const Color mint = Color(0xFF70CAB0);
-  static const Color dark = Color(0xFF071836);
   bool _isPasswordHidden = true;
 
   final TextEditingController emailController = TextEditingController();
@@ -26,7 +25,7 @@ class _LoginPageState extends State<LoginPage> {
       body: Stack(
         children: [
           // Header mint container
-          Container(height: 500, color: mint),
+          Container(height: 500, color: AppColors.mint),
 
           // Main content
           SafeArea(
@@ -46,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
                           const Text(
                             'Sensational Glasses',
                             style: TextStyle(
-                              color: Color(0xFF2A274B),
+                              color: AppColors.dark,
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                             ),
@@ -57,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
                       const Text(
                         'Masuk ke Akun\nAnda',
                         style: TextStyle(
-                          color: Color(0xFF2A274B),
+                          color: AppColors.dark,
                           fontSize: 36,
                           fontWeight: FontWeight.w800,
                           height: 1.02,
@@ -76,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
                             child: const Text(
                               'Daftar',
                               style: TextStyle(
-                                color: Color(0xFF2A274B),
+                                color: AppColors.dark,
                                 decoration: TextDecoration.underline,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -105,13 +104,8 @@ class _LoginPageState extends State<LoginPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // EMAIL
-                        const Text(
-                          'Email',
-                          style: TextStyle(
-                            color: Color(0xFF2A274B),
-                            fontSize: 13,
-                          ),
-                        ),
+                        const Text('Email', style: AppTextStyles.label),
+
                         const SizedBox(height: 6),
                         TextFormField(
                           controller: emailController,
@@ -120,13 +114,7 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 12),
 
                         // PASSWORD
-                        const Text(
-                          'Password',
-                          style: TextStyle(
-                            color: Color(0xFF2A274B),
-                            fontSize: 13,
-                          ),
-                        ),
+                        const Text('Password', style: AppTextStyles.label),
                         const SizedBox(height: 6),
                         TextFormField(
                           controller: passwordController,
@@ -137,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
                                 _isPasswordHidden
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: const Color(0xFF2A274B),
+                                color: AppColors.textPrimary,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -152,7 +140,8 @@ class _LoginPageState extends State<LoginPage> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () => Get.toNamed(Routes.FORGOT_PASSWORD),
+                            onPressed: () =>
+                                Get.toNamed(Routes.FORGOT_PASSWORD),
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,
                               minimumSize: const Size(0, 30),
@@ -160,10 +149,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             child: const Text(
                               'Lupa Password ?',
-                              style: TextStyle(
-                                color: Color(0xFF2A274B),
-                                fontSize: 13,
-                              ),
+                              style: AppTextStyles.label,
                             ),
                           ),
                         ),
@@ -173,14 +159,45 @@ class _LoginPageState extends State<LoginPage> {
                           height: 48,
                           child: ElevatedButton(
                             onPressed: () {
+                              final email = emailController.text.trim();
+                              final password = passwordController.text.trim();
+
+                              if (email.isEmpty && password.isEmpty) {
+                                Get.snackbar(
+                                  "Error",
+                                  "Email dan password wajib diisi",
+                                  backgroundColor: AppColors.error,
+                                  colorText: AppColors.white,
+                                );
+                                return;
+                              }
+
+                              if (email.isEmpty) {
+                                Get.snackbar(
+                                  "Error",
+                                  "Harap masukkan email",
+                                  backgroundColor: AppColors.error,
+                                  colorText: AppColors.white,
+                                );
+                                return;
+                              }
+
+                              if (password.isEmpty) {
+                                Get.snackbar(
+                                  "Error",
+                                  "Harap masukkan password",
+                                  backgroundColor: AppColors.error,
+                                  colorText: AppColors.white,
+                                );
+                                return;
+                              }
+
                               Get.find<AuthController>()
-                                  .signInWithEmailAndPassword(
-                                    emailController.text.trim(),
-                                    passwordController.text.trim(),
-                                  );
+                                  .signInWithEmailAndPassword(email, password);
                             },
+
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: mint,
+                              backgroundColor: AppColors.mint,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -205,22 +222,19 @@ class _LoginPageState extends State<LoginPage> {
                             Expanded(
                               child: Divider(
                                 thickness: 1,
-                                color: Color(0xFFEEEEEE),
+                                color: AppColors.divider,
                               ),
                             ),
                             SizedBox(width: 12),
                             Text(
                               'Atau masuk dengan',
-                              style: TextStyle(
-                                color: Color(0xFF2A274B),
-                                fontSize: 12,
-                              ),
+                              style: AppTextStyles.label,
                             ),
                             SizedBox(width: 12),
                             Expanded(
                               child: Divider(
                                 thickness: 1,
-                                color: Color(0xFFEEEEEE),
+                                color: AppColors.divider,
                               ),
                             ),
                           ],
@@ -256,7 +270,7 @@ class _LoginPageState extends State<LoginPage> {
                                     const SizedBox(width: 10),
                                     const Text(
                                       'Google',
-                                      style: TextStyle(fontSize: 13),
+                                      style: AppTextStyles.label,
                                     ),
                                   ],
                                 ),
@@ -288,7 +302,7 @@ class _LoginPageState extends State<LoginPage> {
                                     const SizedBox(width: 10),
                                     const Text(
                                       'Facebook',
-                                      style: TextStyle(fontSize: 13),
+                                      style: AppTextStyles.label,
                                     ),
                                   ],
                                 ),
@@ -296,34 +310,6 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ],
                         ),
-
-                        const Spacer(),
-
-                        // TERMS & CONDITIONS
-                        Center(
-                          child: RichText(
-                            textAlign: TextAlign.center,
-                            text: const TextSpan(
-                              text: 'Dengan mendaftar, Anda menyetujui ',
-                              style: TextStyle(color: dark, fontSize: 13),
-                              children: [
-                                TextSpan(
-                                  text: 'Persyaratan\n',
-                                  style: TextStyle(color: mint),
-                                ),
-                                TextSpan(
-                                  text: 'Layanan dan ',
-                                  style: TextStyle(color: dark),
-                                ),
-                                TextSpan(
-                                  text: 'Perjanjian Pemrosesan Data',
-                                  style: TextStyle(color: mint),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
                         const SizedBox(height: 16),
                       ],
                     ),
