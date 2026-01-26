@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
 
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: Colors.blue,
+        colorSchemeSeed: Color(0xFF70CAB0),
       ),
     );
   }

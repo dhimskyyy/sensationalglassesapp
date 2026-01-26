@@ -253,62 +253,6 @@ class _VerificationPageState extends State<VerificationPage> {
                           ),
                         ),
 
-                        // SizedBox(
-                        //   height: 48,
-                        //   child: ElevatedButton(
-                        //     onPressed: _isLoading
-                        //         ? null
-                        //         : () async {
-                        //             // Validasi panjang kode
-                        //             if (_otpCode.length < 6) {
-                        //               Get.snackbar(
-                        //                 "Error",
-                        //                 "Harap masukkan 6 digit kode",
-                        //                 backgroundColor: AppColors.error,
-                        //                 colorText: Colors.white,
-                        //               );
-                        //               return;
-                        //             }
-
-                        //             setState(() => _isLoading = true);
-                                    
-                        //             // Panggil fungsi verify di Controller
-                        //             await Get.find<AuthController>().verifyOtp(_otpCode);
-                                    
-                        //             // Simulasi Loading sebentar agar UX lebih terasa
-                        //             // await Future.delayed(const Duration(seconds: 1));
-
-                        //             setState(() => _isLoading = false);
-
-                        //             // ARAHKAN KE HOME (Sesuai Permintaan)
-                        //             Get.offAllNamed(Routes.HOME);
-                        //           },
-                        //     style: ElevatedButton.styleFrom(
-                        //       backgroundColor: AppColors.mint,
-                        //       shape: RoundedRectangleBorder(
-                        //         borderRadius: BorderRadius.circular(16),
-                        //       ),
-                        //       elevation: 0,
-                        //     ),
-                        //     child: _isLoading
-                        //         ? const SizedBox(
-                        //             height: 20,
-                        //             width: 20,
-                        //             child: CircularProgressIndicator(
-                        //               color: Colors.white,
-                        //               strokeWidth: 2,
-                        //             ),
-                        //           )
-                        //         : const Text(
-                        //             'Verification',
-                        //             style: TextStyle(
-                        //               fontSize: 16,
-                        //               color: Colors.white,
-                        //               fontWeight: FontWeight.w700,
-                        //             ),
-                        //           ),
-                        //   ),
-                        // ),
                         const SizedBox(height: 16),
                         
                         // KEMBALI KE LOGIN

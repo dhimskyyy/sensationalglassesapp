@@ -18,27 +18,25 @@ class AuthController extends GetxController {
   }
 
   // ================== FUNGSI BANTUAN CEK STATUS VERIFIKASI ==================
-  // Fungsi ini dipanggil setiap kali Login berhasil
   Future<void> _checkVerificationAndRoute(User user) async {
     try {
-      DocumentSnapshot doc = await _firestore.collection('users').doc(user.uid).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get();
 
       if (doc.exists) {
         Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
-        
-        // Ambil status is_verified, default ke false jika tidak ada
+
         bool isVerified = data?['is_verified'] ?? false;
 
         if (isVerified) {
-          // USER LAMA (Sudah Verifikasi) -> Langsung Home
           Get.offAllNamed(Routes.HOME);
         } else {
-          // USER BARU / BELUM VERIFIKASI -> Ke Halaman OTP
           Get.offAllNamed(Routes.VERIFICATIONPAGE, arguments: user.email);
           Get.snackbar("Info", "Silakan verifikasi akun Anda terlebih dahulu.");
         }
       } else {
-        // Jika data tidak ditemukan, anggap user baru
         Get.offAllNamed(Routes.VERIFICATIONPAGE, arguments: user.email);
       }
     } catch (e) {
@@ -55,13 +53,14 @@ class AuthController extends GetxController {
       );
 
       if (cred.user != null) {
-        // PENTING: Cek status dulu sebelum masuk Home
-        await _checkVerificationAndRoute(cred.user!); 
+        await _checkVerificationAndRoute(cred.user!);
       }
     } on FirebaseAuthException catch (e) {
-      String message = "Login gagal";
-      if (e.code == 'user-not-found') message = "Email belum terdaftar";
-      else if (e.code == 'wrong-password') message = "Password salah";
+      String message = "Login gagal, harap masukkan email dan password dengan benar";
+      if (e.code == 'user-not-found')
+        message = "Email belum terdaftar";
+      else if (e.code == 'wrong-password')
+        message = "Password salah";
       _showError(message);
     } catch (_) {
       _showError("Terjadi kesalahan");
@@ -80,15 +79,14 @@ class AuthController extends GetxController {
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = 
-          await _auth.signInWithCredential(credential);
-      
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
       final User? user = userCredential.user;
 
       if (user != null) {
-        // Cek apakah ini user yang benar-benar baru pertama kali sign-in
         if (userCredential.additionalUserInfo?.isNewUser ?? false) {
-          // USER BARU: Simpan data & Set verified FALSE
           await _firestore.collection('users').doc(user.uid).set({
             "uid": user.uid,
             "firstName": user.displayName?.split(' ').first ?? "",
@@ -96,14 +94,12 @@ class AuthController extends GetxController {
             "email": user.email,
             "phone": user.phoneNumber ?? "",
             "createdAt": DateTime.now(),
-            "is_verified": false, // Wajib verifikasi OTP
-            "otp_code": "123456", 
+            "is_verified": false,
+            "otp_code": "123456",
           });
-          
-          // Arahkan ke Verifikasi
+
           Get.offAllNamed(Routes.VERIFICATIONPAGE, arguments: user.email);
         } else {
-          // USER LAMA: Cek status verifikasi (siapa tahu dulu belum selesai)
           await _checkVerificationAndRoute(user);
         }
       }
@@ -122,26 +118,25 @@ class AuthController extends GetxController {
         result.accessToken!.token,
       );
 
-      final UserCredential userCredential = 
-          await _auth.signInWithCredential(credential);
-      
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
       final User? user = userCredential.user;
 
       if (user != null) {
         if (userCredential.additionalUserInfo?.isNewUser ?? false) {
-           // User Baru Facebook
-           await _firestore.collection('users').doc(user.uid).set({
+          await _firestore.collection('users').doc(user.uid).set({
             "uid": user.uid,
             "firstName": user.displayName?.split(' ').first ?? "",
             "lastName": "",
             "email": user.email ?? "",
             "createdAt": DateTime.now(),
-            "is_verified": false, 
-            "otp_code": "123456", 
+            "is_verified": false,
+            "otp_code": "123456",
           });
           Get.offAllNamed(Routes.VERIFICATIONPAGE, arguments: user.email);
         } else {
-          // User Lama Facebook
           await _checkVerificationAndRoute(user);
         }
       }
@@ -150,47 +145,44 @@ class AuthController extends GetxController {
     }
   }
 
-  // ================== VERIFIKASI KODE OTP (Diupdate) ==================
+  // ================== VERIFIKASI KODE OTP ==================
   Future<void> verifyOtp(String inputOtp) async {
     try {
       User? user = _auth.currentUser;
       if (user == null) throw "User tidak ditemukan";
 
-      // 1. Ambil OTP asli dari Database
-      DocumentSnapshot doc = await _firestore.collection('users').doc(user.uid).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get();
       if (!doc.exists) throw "Data user tidak valid";
 
       String serverOtp = doc.get('otp_code') ?? "";
 
-      // 2. Simulasi Loading (opsional)
-      // await Future.delayed(const Duration(seconds: 2));
-
       // 3. Cek OTP
-      if (inputOtp == serverOtp || inputOtp == "123456") { // "123456" Backdoor untuk testing
-        
-        // PENTING: Update status menjadi SUDAH VERIFIKASI
+      if (inputOtp == serverOtp || inputOtp == "123456") {
         await _firestore.collection('users').doc(user.uid).update({
-          "is_verified": true, // <--- Ini kuncinya agar user lama tidak diminta OTP lagi
-          "otp_code": FieldValue.delete(), // Hapus OTP agar bersih
+          "is_verified": true,
+          "otp_code": FieldValue.delete(),
         });
 
-        Get.snackbar("Sukses", "Akun berhasil diverifikasi", 
-          backgroundColor: Colors.green, colorText: Colors.white);
-        
-        // Arahkan ke Home
+        Get.snackbar(
+          "Sukses",
+          "Akun berhasil diverifikasi",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+
         Get.offAllNamed(Routes.HOME);
-        
       } else {
         throw "Kode OTP salah";
       }
-
     } catch (e) {
-      // Lempar error agar UI tahu (untuk matikan loading)
       throw e.toString();
     }
   }
 
-  // ================== KIRIM EMAIL RESET (Langkah 1) ==================
+  // ================== KIRIM EMAIL RESET ==================
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
@@ -200,8 +192,6 @@ class AuthController extends GetxController {
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
-      // Opsi: Setelah email dikirim, arahkan ke halaman VerificationPage
-      // Get.to(() => const VerificationPage()); 
     } on FirebaseAuthException catch (e) {
       String message = "Gagal mengirim email reset";
       if (e.code == 'user-not-found') {
@@ -212,7 +202,6 @@ class AuthController extends GetxController {
       _showError(message);
     }
   }
-
 
   // ================== LOGOUT ==================
   Future<void> signOut() async {

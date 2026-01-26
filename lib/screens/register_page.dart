@@ -4,8 +4,12 @@ import 'package:intl/intl.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:math';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../app/theme/app_colors.dart';
 import '../app/theme/app_text_styles.dart';
+import '../app/routes/app_pages.dart'; 
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,18 +19,69 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-
+  // Controller untuk input teks
   final TextEditingController firstName = TextEditingController();
   final TextEditingController lastName = TextEditingController();
   final TextEditingController email = TextEditingController();
   final TextEditingController birthDate = TextEditingController();
   final TextEditingController phone = TextEditingController();
   final TextEditingController password = TextEditingController();
+  
   bool hidePass = true;
-
+  bool isLoading = false;
   String? completePhoneNumber;
 
-  // DATE PICKER
+  // ========================================================
+  // 1. KONFIGURASI EMAILJS (ISI DENGAN DATA ANDA)
+  // ========================================================
+  // TODO: Ganti placeholder ini dengan kunci asli dari EmailJS Anda
+  final String serviceId = 'service_v9e4i6c'; 
+  final String templateId = 'template_nlmf1wn'; 
+  final String publicKey = '4naTiGhbhMWZAnEYr'; 
+
+  // --- FUNGSI: MEMBUAT KODE OTP 6 DIGIT ACAK ---
+  String generateOTP() {
+    var rng = Random();
+    return (100000 + rng.nextInt(900000)).toString();
+  }
+
+  // --- FUNGSI: KIRIM EMAIL MENGGUNAKAN EMAILJS ---
+  Future<bool> sendEmailOTP(String name, String emailTujuan, String otp) async {
+    final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'origin': 'http://localhost',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'service_id': serviceId,
+          'template_id': templateId,
+          'user_id': publicKey,
+          'template_params': {
+            'to_name': name,       // Sesuai variabel {{to_name}} di template EmailJS
+            'to_email': emailTujuan, // Wajib: agar EmailJS tahu mau kirim kemana
+            'otp_code': otp,       // Sesuai variabel {{otp_code}} di template EmailJS
+          }
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print("✅ Email OTP berhasil dikirim ke $emailTujuan");
+        return true;
+      } else {
+        print("❌ Gagal kirim email: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("❌ Error koneksi: $e");
+      return false;
+    }
+  }
+
+  // --- DATE PICKER (PILIH TANGGAL) ---
   Future<void> pickDate() async {
     DateTime? result = await showDatePicker(
       context: context,
@@ -39,22 +94,43 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  // EMAIL VALIDATION
+  // --- VALIDASI EMAIL ---
   bool isValidEmail(String email) {
     final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     return regex.hasMatch(email);
   }
 
-  // PASSWORD VALIDATION
+  // --- VALIDASI PASSWORD ---
   bool isValidPassword(String pass) {
+    // Minimal 8 karakter, harus ada huruf besar, huruf kecil, dan angka/simbol
     final regex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*[\d\W]).+$');
-    return regex.hasMatch(pass);
+    return regex.hasMatch(pass) && pass.length >= 8;
   }
 
-  // FIREBASE REGISTER + SAVE TO FIRESTORE
+  // --- FUNGSI UTAMA: MENDAFTAR USER ---
   Future<void> registerUser() async {
+    setState(() => isLoading = true); // Mulai Loading (tombol disable)
+
     try {
-      // 1. Create User di Auth
+      // 1. Buat kode OTP acak
+      String otpCode = generateOTP();
+
+      // 2. Kirim Email OTP (Tunggu sampai sukses sebelum lanjut buat akun)
+      //    Catatan: Kita kirim email dulu untuk memastikan email valid/aktif
+      bool emailSent = await sendEmailOTP(firstName.text, email.text.trim(), otpCode);
+
+      if (!emailSent) {
+        Get.snackbar(
+          "Gagal", 
+          "Gagal mengirim kode ke email. Periksa koneksi internet atau pastikan email benar.",
+          backgroundColor: AppColors.error, 
+          colorText: Colors.white
+        );
+        setState(() => isLoading = false);
+        return; // Berhenti jika email gagal terkirim
+      }
+
+      // 3. Buat User di Firebase Authentication
       UserCredential userCred = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
             email: email.text.trim(),
@@ -62,11 +138,8 @@ class _RegisterPageState extends State<RegisterPage> {
           );
 
       String uid = userCred.user!.uid;
-      
-      // Simulasi generate OTP
-      String dummyOtp = "123456"; 
 
-      // 2. Simpan ke Firestore
+      // 4. Simpan Data User + OTP ke Firestore
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
         "uid": uid,
         "firstName": firstName.text.trim(),
@@ -75,19 +148,13 @@ class _RegisterPageState extends State<RegisterPage> {
         "birthDate": birthDate.text.trim(),
         "phone": completePhoneNumber,
         "createdAt": DateTime.now(),
-        "is_verified": false, // PENTING: Set belum verifikasi
-        "otp_code": dummyOtp, // Simpan OTP di database
+        "is_verified": false,
+        "otp_code": otpCode,
       });
 
-      // Hapus baris ini agar user tetap login saat pindah ke halaman verifikasi
-      // await FirebaseAuth.instance.signOut(); 
-
-      // 3. NAVIGASI KE VERIFICATION PAGE
-      // Kita kirim email sebagai argument
-      Get.toNamed('/verification-page', arguments: email.text.trim()); 
-      
-      // Atau jika menggunakan class langsung:
-      // Get.to(() => const VerificationPage(email: email.text.trim()));
+      // 5. Pindah ke Halaman Verifikasi
+      // Kirim email sebagai argumen agar bisa ditampilkan di halaman berikutnya
+      Get.toNamed(Routes.VERIFICATIONPAGE, arguments: email.text.trim());
 
       Get.snackbar(
         "Berhasil",
@@ -99,10 +166,19 @@ class _RegisterPageState extends State<RegisterPage> {
     } on FirebaseAuthException catch (e) {
       Get.snackbar(
         "Error",
-        e.message ?? "Terjadi kesalahan",
+        e.message ?? "Terjadi kesalahan pada server",
         backgroundColor: Colors.red.withOpacity(0.85),
         colorText: Colors.white,
       );
+    } catch (e) {
+      Get.snackbar(
+        "Error", 
+        e.toString(),
+        backgroundColor: Colors.red.withOpacity(0.85),
+        colorText: Colors.white,
+      );
+    } finally {
+      if (mounted) setState(() => isLoading = false); 
     }
   }
 
@@ -185,7 +261,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   const SizedBox(height: 20),
 
-                  // WHITE FORM CONTAINER
+                  // CONTAINER FORM PUTIH
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(30, 38, 30, 20),
@@ -198,7 +274,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // NAME ROW
+                        // BARIS NAMA
                         Row(
                           children: [
                             Expanded(
@@ -247,12 +323,13 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: email,
+                          keyboardType: TextInputType.emailAddress,
                           decoration: _inputDecoration(),
                         ),
 
                         const SizedBox(height: 18),
 
-                        // BIRTHDATE
+                        // TANGGAL LAHIR
                         const Text(
                           "Tanggal Lahir",
                           style: AppTextStyles.label,
@@ -275,7 +352,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         const SizedBox(height: 18),
 
-                        // PHONE
+                        // NOMOR TELEPON
                         const Text(
                           "Nomor Telepon",
                           style: AppTextStyles.label,
@@ -337,7 +414,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         const SizedBox(height: 32),
 
-                        // BUTTON
+                        // TOMBOL DAFTAR
                         SizedBox(
                           height: 48,
                           child: ElevatedButton(
@@ -347,8 +424,9 @@ class _RegisterPageState extends State<RegisterPage> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            onPressed: () {
-                              // VALIDATION
+                            // Disable tombol saat loading
+                            onPressed: isLoading ? null : () {
+                              // VALIDASI DATA
                               if (firstName.text.isEmpty ||
                                   lastName.text.isEmpty ||
                                   email.text.isEmpty ||
@@ -359,7 +437,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   "Form Tidak Lengkap",
                                   "Harap isi semua data.",
                                   backgroundColor: AppColors.error,
-                                  colorText: AppColors.white,
+                                  colorText: Colors.white,
                                 );
                                 return;
                               }
@@ -369,7 +447,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   "Email Tidak Valid",
                                   "Masukkan email yang benar.",
                                   backgroundColor: AppColors.error,
-                                  colorText: AppColors.white,
+                                  colorText: Colors.white,
                                 );
                                 return;
                               }
@@ -377,23 +455,29 @@ class _RegisterPageState extends State<RegisterPage> {
                               if (!isValidPassword(password.text)) {
                                 Get.snackbar(
                                   "Password Lemah",
-                                  "Minimal 8 Karaket dan harus ada kombinasi huruf besar, kecil, angka/simbol.",
+                                  "Minimal 8 Karakter, kombinasi huruf besar, kecil, angka/simbol.",
                                   backgroundColor: AppColors.error,
-                                  colorText: AppColors.white,
+                                  colorText: Colors.white,
                                 );
                                 return;
                               }
 
-                              registerUser(); // 🔥 REGISTER + SAVE FIRESTORE
+                              // JALANKAN PROSES REGISTER
+                              registerUser(); 
                             },
-                            child: const Text(
-                              "Daftar",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.white,
-                              ),
-                            ),
+                            child: isLoading 
+                              ? const SizedBox(
+                                  height: 20, width: 20, 
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                                )
+                              : const Text(
+                                  "Daftar",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.white,
+                                  ),
+                                ),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -439,7 +523,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // INPUT DECORATION
+  // DEKORASI INPUT
   InputDecoration _inputDecoration() {
     return InputDecoration(
       filled: true,

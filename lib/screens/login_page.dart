@@ -67,7 +67,7 @@ class _LoginPageState extends State<LoginPage> {
                         children: [
                           const Text(
                             'Belum Punya Akun?',
-                            style: TextStyle(color: Colors.white, fontSize: 14),
+                            style: AppTextStyles.subtitle,
                           ),
                           const SizedBox(width: 8),
                           GestureDetector(
@@ -205,14 +205,11 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             child: const Text(
                               'Masuk',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
+                              style: AppTextStyles.button
                               ),
                             ),
                           ),
-                        ),
+                        
 
                         const SizedBox(height: 22),
 
