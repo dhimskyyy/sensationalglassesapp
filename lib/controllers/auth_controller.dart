@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:sensationalglassesapp/app/theme/app_colors.dart';
 import '../app/routes/app_pages.dart';
 import 'dart:convert';
 import 'dart:math';
@@ -61,24 +62,25 @@ class AuthController extends GetxController {
   // ================== FUNGSI BANTUAN CEK STATUS VERIFIKASI ==================
   Future<void> _checkVerificationAndRoute(User user) async {
     try {
-      DocumentSnapshot doc = await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      // 1. Paksa reload untuk mendapatkan status emailVerified terbaru dari server Firebase
+      await user.reload(); 
+      
+      // Ambil user terbaru setelah reload
+      User? updatedUser = _auth.currentUser;
 
-      if (doc.exists) {
-        Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+      if (updatedUser != null && updatedUser.emailVerified) {
+        // SITUASI: USER SUDAH KLIK LINK
+        // Update Firestore agar sinkron
+        await _firestore.collection('users').doc(updatedUser.uid).update({
+          "is_verified": true,
+        });
 
-        bool isVerified = data?['is_verified'] ?? false;
-
-        if (isVerified) {
-          Get.offAllNamed(Routes.HOME);
-        } else {
-          Get.offAllNamed(Routes.VERIFICATIONPAGE, arguments: user.email);
-          Get.snackbar("Info", "Silakan verifikasi akun Anda terlebih dahulu.");
-        }
+        // Langsung arahkan ke HOME
+        Get.offAllNamed(Routes.HOME);
       } else {
-        Get.offAllNamed(Routes.VERIFICATIONPAGE, arguments: user.email);
+        // SITUASI: USER BELUM KLIK LINK
+        // Arahkan ke halaman instruksi verifikasi email (BUKAN code verification OTP)
+        Get.offAllNamed(Routes.EMAILVERIFICATIONPAGE, arguments: updatedUser?.email);
       }
     } catch (e) {
       _showError("Gagal memuat status user: $e");
@@ -108,97 +110,86 @@ class AuthController extends GetxController {
     }
   }
 
-  // ================== GOOGLE LOGIN ==================
-  Future<void> signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
+// ================== GOOGLE LOGIN (TANPA VERIFIKASI) ==================
+Future<void> signInWithGoogle() async {
+  try {
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    if (googleUser == null) return;
 
-      final googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+    final googleAuth = await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(
-        credential,
-      );
+    final UserCredential userCredential = await _auth.signInWithCredential(credential);
+    final User? user = userCredential.user;
 
-      final User? user = userCredential.user;
+    if (user != null) {
+      // Jika ini pengguna baru, buat dokumen di Firestore
+      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
+        String firstName = user.displayName?.split(' ').first ?? "User";
+        String lastName = user.displayName?.split(' ').last ?? "";
 
-      if (user != null) {
-        if (userCredential.additionalUserInfo?.isNewUser ?? false) {
-          // 1. Generate OTP Baru
-          String otpCode = generateOTP();
-          String firstName = user.displayName?.split(' ').first ?? "User";
-
-          // 2. Kirim Email OTP via EmailJS
-          await sendEmailOTP(firstName, user.email!, otpCode);
-
-          // 3. Simpan ke Firestore dengan OTP asli (bukan 123456)
-          await _firestore.collection('users').doc(user.uid).set({
-            "uid": user.uid,
-            "firstName": firstName,
-            "lastName": user.displayName?.split(' ').last ?? "",
-            "email": user.email,
-            "phone": user.phoneNumber ?? "",
-            "createdAt": DateTime.now(),
-            "is_verified": false,
-            "otp_code": otpCode, // OTP dinamis
-          });
-
-          Get.offAllNamed(Routes.VERIFICATIONPAGE, arguments: user.email);
-        } else {
-          await _checkVerificationAndRoute(user);
-        }
+        await _firestore.collection('users').doc(user.uid).set({
+          "uid": user.uid,
+          "firstName": firstName,
+          "lastName": lastName,
+          "email": user.email,
+          "phone": user.phoneNumber ?? "",
+          "createdAt": DateTime.now(),
+          "is_verified": true, // OTOMATIS TRUE
+        });
+      } else {
+        // Jika pengguna lama, pastikan is_verified di update jadi true (opsional)
+        await _firestore.collection('users').doc(user.uid).update({
+          "is_verified": true,
+        });
       }
-    } catch (e) {
-      _showError("Login Google gagal: $e");
+      
+      // LANGSUNG KE HOME
+      Get.offAllNamed(Routes.HOME);
     }
+  } catch (e) {
+    _showError("Login Google gagal: $e");
   }
+}
 
-  // ================== FACEBOOK LOGIN ==================
-  Future<void> signInWithFacebook() async {
-    try {
-      final result = await FacebookAuth.instance.login();
-      if (result.status != LoginStatus.success) return;
+// ================== FACEBOOK LOGIN (TANPA VERIFIKASI) ==================
+Future<void> signInWithFacebook() async {
+  try {
+    final result = await FacebookAuth.instance.login();
+    if (result.status != LoginStatus.success) return;
 
-      final credential = FacebookAuthProvider.credential(
-        result.accessToken!.token,
-      );
+    final credential = FacebookAuthProvider.credential(result.accessToken!.token);
+    final UserCredential userCredential = await _auth.signInWithCredential(credential);
+    final User? user = userCredential.user;
 
-      final UserCredential userCredential = await _auth.signInWithCredential(
-        credential,
-      );
+    if (user != null) {
+      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
+        String firstName = user.displayName?.split(' ').first ?? "User";
 
-      final User? user = userCredential.user;
-
-      if (user != null) {
-        if (userCredential.additionalUserInfo?.isNewUser ?? false) {
-          String otpCode = generateOTP();
-          String firstName = user.displayName?.split(' ').first ?? "User";
-
-          await sendEmailOTP(firstName, user.email ?? "", otpCode);
-
-          await _firestore.collection('users').doc(user.uid).set({
-            "uid": user.uid,
-            "firstName": firstName,
-            "lastName": "",
-            "email": user.email ?? "",
-            "createdAt": DateTime.now(),
-            "is_verified": false,
-            "otp_code": otpCode,
-          });
-          Get.offAllNamed(Routes.VERIFICATIONPAGE, arguments: user.email);
-        } else {
-          await _checkVerificationAndRoute(user);
-        }
+        await _firestore.collection('users').doc(user.uid).set({
+          "uid": user.uid,
+          "firstName": firstName,
+          "lastName": "",
+          "email": user.email ?? "",
+          "createdAt": DateTime.now(),
+          "is_verified": true, // OTOMATIS TRUE
+        });
+      } else {
+        await _firestore.collection('users').doc(user.uid).update({
+          "is_verified": true,
+        });
       }
-    } catch (e) {
-      _showError("Login Facebook gagal: $e");
+      
+      // LANGSUNG KE HOME
+      Get.offAllNamed(Routes.HOME);
     }
+  } catch (e) {
+    _showError("Login Facebook gagal: $e");
   }
-
+}
   // ================== RESEND OTP ==================
   Future<void> resendOtp(String email) async {
     try {
@@ -235,7 +226,6 @@ class AuthController extends GetxController {
     }
   }
 
-  // ================== VERIFIKASI KODE OTP ==================
   // ================== VERIFIKASI KODE OTP ==================
   Future<void> verifyOtp(String inputOtp) async {
     try {
@@ -295,6 +285,35 @@ class AuthController extends GetxController {
       _showError(message);
     }
   }
+
+  // ================== RELOAD USER & CEK VERIFIKASI EMAIL ==================
+Future<void> resendVerificationEmail() async {
+  try {
+    await _auth.currentUser?.sendEmailVerification();
+    Get.snackbar("Sukses", "Link verifikasi baru telah dikirim.");
+  } catch (e) {
+    Get.snackbar("Error", "Gagal mengirim ulang: $e");
+  }
+}
+
+Future<void> reloadUserAndCheckVerification() async {
+  User? user = _auth.currentUser;
+  await user?.reload(); // Ini kunci utama!
+  
+  if (user?.emailVerified ?? false) {
+    // Update Firestore
+    await _firestore.collection('users').doc(user!.uid).update({
+      "is_verified": true,
+    });
+    Get.offAllNamed(Routes.HOME);
+  } else {
+    Get.snackbar("Info", "Email belum diverifikasi. Silakan klik link di email Anda.",
+    backgroundColor: AppColors.error, 
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+    );
+  }
+}
 
   // ================== LOGOUT ==================
   Future<void> signOut() async {

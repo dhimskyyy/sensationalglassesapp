@@ -62,37 +62,50 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => isLoading = true);
 
     try {
-      // 2. Gunakan Logika dari Controller
-      String otpCode = authC.generateOTP();
-      
-      // 3. Kirim Email via Controller
-      bool emailSent = await authC.sendEmailOTP(firstName.text, email.text.trim(), otpCode);
-
-      if (!emailSent) {
-        throw "Gagal mengirim kode OTP. Periksa koneksi internet.";
-      }
-
-      // 4. Proses Firebase (Bisa juga dipindah ke Controller jika ingin lebih rapi lagi)
+      // 2. Buat User di Firebase Authentication
       UserCredential userCred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email.text.trim(),
         password: password.text.trim(),
       );
 
-      await FirebaseFirestore.instance.collection('users').doc(userCred.user!.uid).set({
-        "uid": userCred.user!.uid,
-        "firstName": firstName.text.trim(),
-        "lastName": lastName.text.trim(),
-        "email": email.text.trim(),
-        "birthDate": birthDate.text.trim(),
-        "phone": completePhoneNumber,
-        "createdAt": DateTime.now(),
-        "is_verified": false,
-        "otp_code": otpCode,
-      });
+      User? user = userCred.user;
 
-      Get.offAllNamed(Routes.VERIFICATIONPAGE, arguments: email.text.trim());
-      Get.snackbar("Berhasil", "Silakan cek email Anda untuk kode verifikasi", backgroundColor: Colors.green, colorText: Colors.white);
+      if (user != null) {
+        // 3. KIRIM LINK VERIFIKASI (Fitur Bawaan Firebase)
+        await user.sendEmailVerification();
 
+        // 4. Simpan Data ke Firestore
+        // Note: Kita tidak menyimpan otp_code lagi di sini karena pakai Link
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          "uid": user.uid,
+          "firstName": firstName.text.trim(),
+          "lastName": lastName.text.trim(),
+          "email": email.text.trim(),
+          "birthDate": birthDate.text.trim(),
+          "phone": completePhoneNumber,
+          "createdAt": DateTime.now(),
+          "is_verified": false, // Tetap false sampai link diklik & divalidasi
+        });
+
+        // 5. Arahkan ke Halaman Verifikasi
+        // Beri tahu user untuk cek inbox email mereka
+        Get.offAllNamed(Routes.EMAILVERIFICATIONPAGE, arguments: email.text.trim());
+        
+        Get.snackbar(
+          "Cek Email", 
+          "Link verifikasi telah dikirim ke ${email.text.trim()}. Silakan klik link tersebut untuk aktifkan akun.", 
+          backgroundColor: AppColors.mint, 
+          colorText: Colors.white,
+          duration: const Duration(seconds: 5),
+        );
+      }
+
+    } on FirebaseAuthException catch (e) {
+      String message = "Terjadi kesalahan";
+      if (e.code == 'email-already-in-use') message = "Email sudah terdaftar";
+      if (e.code == 'weak-password') message = "Password terlalu lemah";
+      
+      Get.snackbar("Error", message, backgroundColor: AppColors.error, colorText: Colors.white);
     } catch (e) {
       Get.snackbar("Error", e.toString(), backgroundColor: AppColors.error, colorText: Colors.white);
     } finally {

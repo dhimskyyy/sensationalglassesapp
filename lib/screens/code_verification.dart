@@ -185,8 +185,7 @@ class _VerificationPageState extends State<VerificationPage> {
                             ),
                           ),
                         ),
-
-                        const SizedBox(height: 24),
+                      
                         const Spacer(),
                         
                         // TOMBOL VERIFICATION
