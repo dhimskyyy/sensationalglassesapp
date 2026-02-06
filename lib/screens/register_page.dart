@@ -178,7 +178,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 "Masuk",
                                 style: TextStyle(
                                   decoration: TextDecoration.underline,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                   fontSize: 14,
                                   color: AppColors.dark,
                                 ),
