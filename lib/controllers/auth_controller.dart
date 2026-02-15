@@ -110,7 +110,7 @@ class AuthController extends GetxController {
           "is_verified": true,
         });
 
-        Get.offAllNamed(Routes.HOME);
+        Get.offAllNamed(Routes.MAIN);
       } else {
         Get.offAllNamed(
           Routes.EMAILVERIFICATIONPAGE,
@@ -199,7 +199,7 @@ class AuthController extends GetxController {
         });
       }
 
-      Get.offAllNamed(Routes.HOME);
+      Get.offAllNamed(Routes.MAIN);
     } catch (e) {
       _showError("Login Google gagal: $e");
     }
@@ -236,7 +236,7 @@ class AuthController extends GetxController {
         });
       }
 
-      Get.offAllNamed(Routes.HOME);
+      Get.offAllNamed(Routes.MAIN);
     } catch (e) {
       _showError("Login Facebook gagal: $e");
     }
@@ -290,7 +290,7 @@ class AuthController extends GetxController {
         "otp_code": FieldValue.delete(),
       });
 
-      Get.offAllNamed(Routes.HOME);
+      Get.offAllNamed(Routes.MAIN);
     } catch (e) {
       throw e.toString().replaceAll("Exception: ", "");
     }
@@ -320,7 +320,7 @@ class AuthController extends GetxController {
         await _firestore.collection('users').doc(user.uid).update({
           "is_verified": true,
         });
-        Get.offAllNamed(Routes.HOME);
+        Get.offAllNamed(Routes.MAIN);
       } else {
         Get.snackbar(
           "Info",

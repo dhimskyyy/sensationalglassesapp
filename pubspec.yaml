@@ -34,6 +34,8 @@ flutter:
     - assets/logo.png
     - assets/google.png
     - assets/facebook.png
+    - assets/profile.png
+    - assets/maps.png
 
 flutter_native_splash:
   color: "#6ED9C7"

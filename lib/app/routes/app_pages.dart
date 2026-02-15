@@ -6,6 +6,9 @@ import '../../screens/home_screen.dart';
 import '../../screens/forgot_password_page.dart';
 import '../../screens/code_verification.dart';
 import '../../screens/email_verification.dart';
+import '../../screens/home_screen.dart';
+import '../../screens/maps.dart';
+import '../../screens/main_navigation.dart';
 
 part 'app_routes.dart';
 
@@ -40,6 +43,14 @@ class AppPages {
     GetPage(
       name: Routes.EMAILVERIFICATIONPAGE,
       page: () => const EmailVerificationPage(),
+    ),
+    GetPage(
+      name: Routes.MAIN,
+      page: () => const MainNavigation(),
+    ),
+    GetPage(
+      name: Routes.MAPS,
+      page: () => const MapsScreen(),
     ),
   ];
 }
