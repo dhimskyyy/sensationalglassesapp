@@ -9,5 +9,7 @@ abstract class Routes {
   static const REGISTER = '/register';
   static const HOME = '/home';
   static const MAPS = '/maps';
-  static const MAIN = '/main'; // Tambahkan route baru
+  static const MAIN = '/main'; 
+  static const DATATUNANETRA = '/data-tunanetra';
+  static const IDCARD = '/id-card';
 }

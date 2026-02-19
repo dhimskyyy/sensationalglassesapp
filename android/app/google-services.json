@@ -37,6 +37,13 @@
             {
               "client_id": "745404063740-8302h92tdt37dkvsk0scjdvfg03oes5e.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "745404063740-t22alce9affjoa2s3m7ga2j7o6c12j7c.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.sensationalglassesapp"
+              }
             }
           ]
         }

@@ -115,7 +115,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GestureDetector(
+      onTap: () => FocusScope.of(
+        context,
+      ).unfocus(),
+    child:  Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
@@ -451,6 +455,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ],
       ),
+    ),
     );
   }
 

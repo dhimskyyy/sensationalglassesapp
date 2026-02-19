@@ -21,6 +21,15 @@ dependencies:
   intl_phone_field: ^3.2.0
   cloud_firestore: ^5.6.12
   http: ^0.13.6
+  mobile_scanner: ^7.1.4
+  google_maps_flutter: ^2.14.2
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  flutter_polyline_points: ^1.0.0
+  flutter_dotenv: ^6.0.0
+  firebase_storage: ^12.4.10
+  image_picker: ^1.2.1
+  cached_network_image: ^3.3.1
 
 dev_dependencies:
   flutter_test:
@@ -31,11 +40,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/logo.png
-    - assets/google.png
-    - assets/facebook.png
-    - assets/profile.png
-    - assets/maps.png
+    - assets/
+    - .env
 
 flutter_native_splash:
   color: "#6ED9C7"

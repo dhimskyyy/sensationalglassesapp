@@ -2,6 +2,7 @@ import UIKit
 import Flutter
 import GoogleSignIn
 import FBSDKCoreKit
+import GoogleMaps
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -10,6 +11,9 @@ import FBSDKCoreKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+
+    let apiKey = Bundle.main.object(forInfoDictionaryKey: "MAPS_API_KEY") as? String
+    GMSServices.provideAPIKey(apiKey ?? "")
 
     // Facebook
     ApplicationDelegate.shared.application(

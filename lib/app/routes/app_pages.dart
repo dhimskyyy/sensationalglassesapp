@@ -6,9 +6,10 @@ import '../../screens/home_screen.dart';
 import '../../screens/forgot_password_page.dart';
 import '../../screens/code_verification.dart';
 import '../../screens/email_verification.dart';
-import '../../screens/home_screen.dart';
 import '../../screens/maps.dart';
 import '../../screens/main_navigation.dart';
+import '../../screens/input_data_tunanetra_page.dart';
+import '../../screens/id_card.dart';
 
 part 'app_routes.dart';
 
@@ -51,6 +52,14 @@ class AppPages {
     GetPage(
       name: Routes.MAPS,
       page: () => const MapsScreen(),
+    ),
+    GetPage(
+      name: Routes.DATATUNANETRA,
+      page: () => const InputDataTunanetraPage(),
+    ),
+    GetPage(
+      name: '/id-card',
+      page: () => const IdCard(),
     ),
   ];
 }

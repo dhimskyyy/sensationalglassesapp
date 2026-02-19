@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:sensationalglassesapp/controllers/home_controller.dart';
 
 import 'package:sensationalglassesapp/app/theme/app_colors.dart';
 import '../app/routes/app_pages.dart';
@@ -336,12 +337,26 @@ class AuthController extends GetxController {
 
   // ================== LOGOUT ==================
   Future<void> signOut() async {
+  try {
+    // 1. Panggil fungsi pembersihan di HomeController sebelum session hancur
+    if (Get.isRegistered<HomeController>()) {
+      Get.find<HomeController>().stopMonitoring(); // Matikan stream & timer
+      Get.delete<HomeController>(force: true); // Hapus paksa dari memori
+    }
+
+    // 2. Logout dari Firebase & Provider
     await GoogleSignIn().signOut();
     await FacebookAuth.instance.logOut();
     await _auth.signOut();
 
-    Get.offAllNamed(Routes.LOGIN);
+    // 3. Bersihkan field dan pindah halaman
+    clearFields();
+    Get.offAllNamed(Routes.LOGIN); 
+    
+  } catch (e) {
+    _showError("Gagal logout: $e");
   }
+}
 
   // ================== ERROR UI ==================
   void _showError(String message) {
