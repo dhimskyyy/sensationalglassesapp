@@ -12,4 +12,5 @@ abstract class Routes {
   static const MAIN = '/main'; 
   static const DATATUNANETRA = '/data-tunanetra';
   static const IDCARD = '/id-card';
+  static const EDITUSERPROFILE = '/edit-user-profile';
 }

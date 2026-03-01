@@ -71,12 +71,10 @@ Widget build(BuildContext context) {
             backgroundColor: const Color(0xFFF8FAFC),
             body: SafeArea(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 20),
-                    // Header Dinamis (Nama User Login/Admin)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -172,7 +170,7 @@ GestureDetector(
                           imageUrl: data?['foto_url'],
                           width: 60, height: 60,
                           fit: BoxFit.cover,
-                          fadeInDuration: Duration.zero, // Langsung muncul
+                          fadeInDuration: Duration.zero,
                           fadeOutDuration: Duration.zero,
                           placeholder: (context, url) => Container(color: Colors.transparent),
                           errorWidget: (context, url, error) => const Icon(Icons.person, color: Colors.white),
@@ -294,24 +292,29 @@ GestureDetector(
     );
   }
 
-  Widget _buildAlarmButton(Color primaryColor) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton.icon(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 5,
-          shadowColor: primaryColor.withOpacity(0.4),
-        ),
-        icon: const Icon(Icons.notifications_active),
-        label: const Text('Activate Alarm', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+Widget _buildAlarmButton(Color primaryColor) {
+  return SizedBox(
+    width: double.infinity,
+    height: 56,
+    child: Obx(() => ElevatedButton.icon(
+      // Jika isAlarmProcessing true, onPressed jadi null (tombol tidak bisa diklik/disabled)
+      onPressed: homeC.isAlarmProcessing.value ? null : () => homeC.triggerAlarm(),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: homeC.isAlarmProcessing.value ? Colors.grey : primaryColor,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 5,
       ),
-    );
-  }
+      icon: homeC.isAlarmProcessing.value 
+          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+          : const Icon(Icons.notifications_active),
+      label: Text(
+        homeC.isAlarmProcessing.value ? 'Alarm is Ringing...' : 'Activate Alarm',
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+    )),
+  );
+}
 
   Widget _buildStatItem(IconData icon, String label, String value) {
     return Row(

@@ -12,8 +12,8 @@ void main() async {
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.dark, // Ikon hitam
-    statusBarBrightness: Brightness.light,    // Ikon hitam (iOS)
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
   ));
 
   await dotenv.load(fileName: ".env");

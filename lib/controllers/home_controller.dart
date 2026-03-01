@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomeController extends GetxController {
   var signal = "Wait...".obs;
@@ -12,10 +14,18 @@ class HomeController extends GetxController {
 
   var latitude = 0.0.obs;
   var longitude = 0.0.obs;
-  
+
   var userName = "User".obs;
+  var userPhone = "".obs;
+  var userBirthDate = "".obs;
+  var userEmail = "".obs;
+  
   var tunanetraData = <String, dynamic>{}.obs;
   var hasTunanetraData = false.obs;
+
+  var userPhotoUrl = "".obs;
+
+  var isAlarmProcessing = false.obs;
 
   Timer? _timer;
   StreamSubscription? _iotSubscription;
@@ -41,6 +51,10 @@ class HomeController extends GetxController {
       if (doc.exists) {
         var data = doc.data();
         userName.value = "${data?['firstName'] ?? ''} ${data?['lastName'] ?? ''}".trim();
+        userEmail.value = data?['email'] ?? user.email ?? "";
+        userPhone.value = data?['phone'] ?? "";
+        userBirthDate.value = data?['birthDate'] ?? "";
+        userPhotoUrl.value = data?['photoUrl'] ?? "";
       }
     });
 
@@ -95,27 +109,95 @@ class HomeController extends GetxController {
   }
 
   Future<void> fetchThingSpeakData(String id, String key) async {
-    try {
-      final url = "https://api.thingspeak.com/channels/$id/feeds.json?api_key=$key&results=1";
-      final response = await http.get(Uri.parse(url));
+  try {
+    final url = "https://api.thingspeak.com/channels/$id/feeds.json?api_key=$key&results=1";
+    final response = await http.get(Uri.parse(url));
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['feeds'] != null && data['feeds'].isNotEmpty) {
-          final lastFeed = data['feeds'][0];
-          signal.value = lastFeed['field1'] ?? "N/A";
-          battery.value = lastFeed['field2'] ?? "0";
-          distance.value = lastFeed['field3'] ?? "0";
-          latitude.value = double.tryParse(lastFeed['field4']?.toString() ?? "0.0") ?? 0.0;
-          longitude.value = double.tryParse(lastFeed['field5']?.toString() ?? "0.0") ?? 0.0;
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['feeds'] != null && data['feeds'].isNotEmpty) {
+        final lastFeed = data['feeds'][0];
 
-          print("Update Lokasi: ${latitude.value}, ${longitude.value}");
-        }
+        // 1. Ambil koordinat alat (Field 1 & 2)
+        double devLat = double.tryParse(lastFeed['field1']?.toString() ?? "0.0") ?? 0.0;
+        double devLng = double.tryParse(lastFeed['field2'] ?? "0.0") ?? 0.0;
+        
+        latitude.value = devLat;
+        longitude.value = devLng;
+
+        // 2. Tampilkan jumlah satelit di bagian Signal (Field 3)
+        signal.value = "${lastFeed['field3'] ?? '0'} Dbm";
+
+        // 3. Baterai set ke N/A (karena alat belum kirim data baterai)
+        battery.value = "N/A";
+
+        // 4. HITUNG JARAK (Distance) - WAJIB MENGGUNAKAN GEOLOCATOR
+        // Ini yang membuat jarak jadi akurat antara HP dan Alat
+        calculateRealDistance(devLat, devLng);
       }
-    } catch (e) {
-      print("Error fetching IoT data: $e");
     }
+  } catch (e) {
+    print("Error: $e");
   }
+}
+
+// Fungsi tambahan untuk menghitung jarak asli
+Future<void> calculateRealDistance(double devLat, double devLng) async {
+  Position userPos = await Geolocator.getCurrentPosition();
+  double distanceInMeters = Geolocator.distanceBetween(
+    userPos.latitude, userPos.longitude, devLat, devLng
+  );
+  distance.value = distanceInMeters.toStringAsFixed(1); // Jarak dalam meter
+}
+
+  // Di dalam home_controller.dart
+
+Future<void> triggerAlarm() async {
+  if (isAlarmProcessing.value) return;
+  isAlarmProcessing.value = true;
+  // Gunakan Write API Key Anda
+  final String writeApiKey = "09IMFFDQ04DHUK5C"; 
+  
+  // URL untuk menyalakan (Field 5 = 1)
+  final urlOn = Uri.parse("https://api.thingspeak.com/update?api_key=$writeApiKey&field5=1");
+  // URL untuk mematikan (Field 5 = 0)
+  final urlOff = Uri.parse("https://api.thingspeak.com/update?api_key=$writeApiKey&field5=0");
+
+  try {
+    // 1. KIRIM PERINTAH NYALA
+    final responseOn = await http.get(urlOn);
+
+    if (responseOn.statusCode == 200) {
+      Get.snackbar(
+        "Alarm Aktif",
+        "Alarm akan berbunyi selama 5 detik",
+        backgroundColor: const Color(0xFF66C7AA),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+
+      // 2. TUNGGU 5 DETIK
+      await Future.delayed(const Duration(seconds: 5));
+
+      // 3. KIRIM PERINTAH MATI SECARA OTOMATIS
+      final responseOff = await http.get(urlOff);
+      
+      if (responseOff.statusCode == 200) {
+        print("Alarm berhasil dimatikan otomatis");
+      }
+    } else {
+      throw Exception("Gagal terhubung ke ThingSpeak");
+    }
+  } catch (e) {
+    Get.snackbar(
+      "Error",
+      "Gagal mengontrol alarm: $e",
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
+  }
+  isAlarmProcessing.value = false;
+}
 
   void stopMonitoring() {
   _timer?.cancel();

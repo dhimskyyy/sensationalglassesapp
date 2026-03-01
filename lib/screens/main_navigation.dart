@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'maps.dart'; 
+import 'profile_screen.dart'; // Sesuaikan dengan lokasi file Anda
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -17,7 +18,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _pages = [
     const HomeScreen(),
     const MapsScreen(), // Index 1
-    const Scaffold(body: Center(child: Text("Profile"))),
+    const ProfileScreen(),
   ];
 
   void _onTapNav(int index) {

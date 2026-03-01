@@ -131,33 +131,55 @@ void _showPicker(context) {
 }
 
 void _bukaScannerKamera() {
+  // Inisialisasi controller secara spesifik
+  final MobileScannerController scannerController = MobileScannerController(
+    detectionSpeed: DetectionSpeed.normal,
+    facing: CameraFacing.back,
+    formats: [BarcodeFormat.qrCode], // FOKUS: Hanya scan QR Code
+    detectionTimeoutMs: 1000, // Beri jeda 1 detik antar deteksi agar tidak lag
+  );
+
   Get.to(() => Scaffold(
-    appBar: AppBar(title: const Text("Posisikan QR di Dalam Kotak")),
+    appBar: AppBar(
+      title: const Text("Posisikan QR di Dalam Kotak"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          scannerController.dispose(); // Pastikan dispose saat keluar
+          Get.back();
+        },
+      ),
+    ),
     body: Stack(
       children: [
         MobileScanner(
-          controller: MobileScannerController(
-            detectionSpeed: DetectionSpeed.normal,
-            facing: CameraFacing.back,
-          ),
+          controller: scannerController,
           onDetect: (capture) {
             final List<Barcode> barcodes = capture.barcodes;
             if (barcodes.isNotEmpty) {
-              final String? code = barcodes.first.rawValue;
+              final String? code = barcodes.first.displayValue ?? barcodes.first.rawValue;
+              
               if (code != null) {
+                // Matikan scanner segera setelah terdeteksi agar tidak looping
+                scannerController.stop(); 
                 _prosesDataDariQR(code);
-                Get.back();
+                
+                // Beri sedikit delay sebelum pindah halaman agar snackbar muncul
+                Future.delayed(const Duration(milliseconds: 500), () {
+                  scannerController.dispose();
+                  Get.back();
+                });
               }
             }
           },
         ),
-        // MENAMBAHKAN OVERLAY KOTAK DI TENGAH
+        // OVERLAY KOTAK
         Center(
           child: Container(
             width: 250,
             height: 250,
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.cyan, width: 4),
+              border: Border.all(color: const Color(0xFF66C7AA), width: 4),
               borderRadius: BorderRadius.circular(20),
             ),
           ),

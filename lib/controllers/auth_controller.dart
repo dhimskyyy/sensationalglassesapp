@@ -62,11 +62,6 @@ class AuthController extends GetxController {
     phoneController.clear();
   }
 
-  String generateOTP() {
-    final rng = Random();
-    return (100000 + rng.nextInt(900000)).toString();
-  }
-
   // ================== EMAIL OTP ==================
   Future<bool> sendEmailOTP(
     String name,
@@ -244,35 +239,54 @@ class AuthController extends GetxController {
   }
 
   // ================== OTP ==================
-  Future<void> resendOtp(String email) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) throw "Sesi berakhir, silakan login kembali";
+  // Di AuthController.dart
 
-      final newOtp = generateOTP();
-
-      await _firestore.collection('users').doc(user.uid).update({
-        "otp_code": newOtp,
-      });
-
-      final doc =
-          await _firestore.collection('users').doc(user.uid).get();
-      final name = doc.get('firstName') ?? "User";
-
-      final isSent = await sendEmailOTP(name, email, newOtp);
-      if (!isSent) throw "Gagal mengirim email";
-
-      Get.snackbar(
-        "Sukses",
-        "Kode OTP baru telah dikirim",
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-    } catch (e) {
-      _showError(e.toString());
-    }
+  String generateOTP() {
+  final rng = Random();
+  return (100000 + rng.nextInt(900000)).toString(); // Menghasilkan 6 digit
+}
+Future<bool> sendWhatsAppOTP(String phoneNumber, String otp) async {
+  // Pastikan nomor diawali dengan kode negara (misal 62)
+  String formattedPhone = phoneNumber;
+  if (formattedPhone.startsWith('0')) {
+    formattedPhone = '62${formattedPhone.substring(1)}';
   }
 
+  final url = Uri.parse('https://api.fonnte.com/send');
+
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        // Ganti dengan API Token dari Dashboard Fonnte Anda
+        'Authorization': 'RjUzjWzqhEkFQaQwp6zJ',
+      },
+      body: {
+        'target': formattedPhone,
+        'message': 'KODE OTP ANDA: $otp. Jangan berikan kode ini kepada siapapun demi keamanan akun Anda.',
+        'countryCode': '62', // Kode negara Indonesia
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print("OTP Berhasil Terkirim: ${response.body}");
+      return true;
+    } else {
+      print("Gagal Kirim OTP: ${response.body}");
+      return false;
+    }
+  } catch (e) {
+    print("Error HTTP: $e");
+    return false;
+  }
+}
+
+      // Get.snackbar(
+      //   "Sukses",
+      //   "Kode OTP baru telah dikirim",
+      //   backgroundColor: Colors.green,
+      //   colorText: Colors.white,
+      // );    
   Future<void> verifyOtp(String inputOtp) async {
     try {
       final user = _auth.currentUser;

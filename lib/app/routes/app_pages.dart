@@ -10,6 +10,7 @@ import '../../screens/maps.dart';
 import '../../screens/main_navigation.dart';
 import '../../screens/input_data_tunanetra_page.dart';
 import '../../screens/id_card.dart';
+import '../../screens/edit_user_profile_page.dart';
 
 part 'app_routes.dart';
 
@@ -60,6 +61,10 @@ class AppPages {
     GetPage(
       name: '/id-card',
       page: () => const IdCard(),
+    ),
+    GetPage(
+      name: Routes.EDITUSERPROFILE,
+      page: () => const UserProfilePage(),
     ),
   ];
 }
