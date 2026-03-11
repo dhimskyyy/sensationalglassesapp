@@ -185,13 +185,23 @@ GestureDetector(
           children: [
             Text(data?['nama_tunanetra'] ?? "No Name",
                 style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-            const Row(
-              children: [
-                Icon(Icons.circle, color: Colors.greenAccent, size: 10),
-                SizedBox(width: 5),
-                Text("Active Now", style: TextStyle(color: Colors.white70, fontSize: 12)),
-              ],
-            ),
+            Obx(() => Row(
+      children: [
+        Icon(
+          Icons.circle, 
+          // Warna berubah sesuai status
+          color: homeC.iotStatus.value == "Active Now" 
+              ? Colors.greenAccent 
+              : (homeC.iotStatus.value == "Lowbat" ? Colors.orangeAccent : Colors.redAccent), 
+          size: 10
+        ),
+        const SizedBox(width: 5),
+        Text(
+          homeC.iotStatus.value, 
+          style: const TextStyle(color: Colors.white70, fontSize: 12)
+        ),
+      ],
+    )),
           ],
         ),
       ),
@@ -207,23 +217,31 @@ GestureDetector(
 
         // BAGIAN OBX UNTUK DATA REAL-TIME
         Obx(() => GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          childAspectRatio: 2.5,
-          children: [
-            _buildStatItem(Icons.calendar_today, 'Date', formattedDate),
+  shrinkWrap: true,
+  physics: const NeverScrollableScrollPhysics(),
+  crossAxisCount: 2,
+  childAspectRatio: 2.5,
+  children: [
+    _buildStatItem(Icons.calendar_today, 'Date', formattedDate),
 
-            // Menampilkan data sinyal dari HomeController
-            _buildStatItem(Icons.signal_cellular_alt, 'Signal', homeC.signal.value),
+    // Signal: Menampilkan "Tidak Terdeteksi" jika isDeviceOff true
+    _buildStatItem(
+      Icons.signal_cellular_alt, 
+      'Signal', 
+      homeC.signal.value
+    ),
 
-            // Menampilkan data baterai dari HomeController
-            _buildStatItem(Icons.battery_full, 'Battery', "${homeC.battery.value}%"),
+    // Battery: Menampilkan % dan icon berubah jika lowbat
+    _buildStatItem(
+      homeC.iotStatus.value == "Lowbat" ? Icons.battery_alert : Icons.battery_full, 
+      'Battery', 
+      "${homeC.battery.value}%"
+    ),
 
-            // Menampilkan data jarak dari HomeController
-            _buildStatItem(Icons.straighten, 'Distance', "${homeC.distance.value} m"),
-          ],
-        )),
+    // Distance: Tetap menampilkan nilai terakhir
+    _buildStatItem(Icons.straighten, 'Distance', "${homeC.distance.value} m"),
+  ],
+)),
       ],
     ),
   );

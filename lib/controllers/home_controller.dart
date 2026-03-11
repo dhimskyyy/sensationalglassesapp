@@ -8,12 +8,15 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 class HomeController extends GetxController {
-  var signal = "Wait...".obs;
+  var signal = "0 dBm".obs;
   var battery = "0".obs;
   var distance = "0".obs;
 
   var latitude = 0.0.obs;
   var longitude = 0.0.obs;
+
+  var iotStatus = "0 dBm".obs; // Untuk menampung "Active Now", "Off", atau "Lowbat"
+  var isDeviceOff = false.obs; // Helper untuk status sinyal
 
   var userName = "User".obs;
   var userPhone = "".obs;
@@ -115,7 +118,7 @@ void resetIoTData() {
   _iotSubscription?.cancel();
   
   // Reset nilai IoT ke default
-  signal.value = "Wait...";
+  signal.value = "0 dBm";
   battery.value = "0";
   distance.value = "0";
   latitude.value = 0.0;
@@ -137,18 +140,41 @@ void resetIoTData() {
       final data = json.decode(response.body);
       if (data['feeds'] != null && data['feeds'].isNotEmpty) {
         final lastFeed = data['feeds'][0];
+        
+        // --- LOGIKA CEK ALAT MATI (TIMEOUT) ---
+        DateTime lastUpdate = DateTime.parse(lastFeed['created_at']).toLocal();
+        DateTime now = DateTime.now();
+        // Jika selisih waktu sekarang dengan data terakhir > 45 detik (interval kirim 15s + toleransi)
+        bool timedOut = now.difference(lastUpdate).inSeconds > 45;
 
         double devLat = double.tryParse(lastFeed['field1']?.toString() ?? "0.0") ?? 0.0;
         double devLng = double.tryParse(lastFeed['field2'] ?? "0.0") ?? 0.0;
-        
-        latitude.value = devLat;
-        longitude.value = devLng;
+        int batteryVal = int.tryParse(lastFeed['field4']?.toString() ?? "0") ?? 0;
 
-        signal.value = "${lastFeed['field3'] ?? '0'} dBm";
+        // 1. Update Lokasi & Jarak (Hanya jika alat nyala, kalau mati biarkan data terakhir)
+        if (!timedOut) {
+          latitude.value = devLat;
+          longitude.value = devLng;
+          calculateRealDistance(devLat, devLng);
+          
+          // 2. Update Sinyal & Baterai
+          signal.value = "${lastFeed['field3'] ?? '0'} dBm";
+          battery.value = batteryVal.toString();
+          isDeviceOff.value = false;
 
-        battery.value = "${lastFeed['field4'] ?? '0'}";
-
-        calculateRealDistance(devLat, devLng);
+          // 3. Update Status Text (Active vs Lowbat)
+          if (batteryVal <= 30) {
+            iotStatus.value = "Lowbat";
+          } else {
+            iotStatus.value = "Active Now";
+          }
+        } else {
+          // KONDISI ALAT MATI / TIMEOUT
+          isDeviceOff.value = true;
+          iotStatus.value = "Off";
+          signal.value = "0 dBm";
+          // Distance & Battery tidak diupdate (menampilkan data terakhir)
+        }
       }
     }
   } catch (e) {

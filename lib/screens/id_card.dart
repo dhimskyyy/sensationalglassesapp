@@ -14,6 +14,7 @@ class IdCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String uid = FirebaseAuth.instance.currentUser!.uid;
+    final HomeController homeC = Get.find<HomeController>();
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -185,42 +186,59 @@ class IdCard extends StatelessWidget {
 
                       // Status Chip
                       const SizedBox(height: 30),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.neutralDark.withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.neutralDark),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.mint,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                "STATUS: ACTIVE",
-                                style: TextStyle(
-                                  color: AppColors.mint,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      // Status Chip
+const SizedBox(height: 30),
+Align(
+  alignment: Alignment.centerRight,
+  child: Obx(() {
+    // Tentukan warna berdasarkan status dari controller
+    Color statusColor;
+    String statusText = homeC.iotStatus.value.toUpperCase();
+
+    if (homeC.iotStatus.value == "Active Now") {
+      statusColor = AppColors.mint;
+    } else if (homeC.iotStatus.value == "Lowbat") {
+      statusColor = Colors.orangeAccent;
+    } else {
+      statusColor = Colors.redAccent;
+      statusText = "OFF"; // Paksa teks jadi OFF jika status selain active/lowbat
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.neutralDark.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.neutralDark),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: statusColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            "STATUS: $statusText",
+            style: TextStyle(
+              color: statusColor,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }),
+),
                     ],
                   ),
                 ),
