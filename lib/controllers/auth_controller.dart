@@ -142,6 +142,7 @@ class AuthController extends GetxController {
       );
 
       if (cred.user != null) {
+        clearFields();
         await _checkVerificationAndRoute(cred.user!);
       }
     } on FirebaseAuthException catch (e) {
@@ -264,7 +265,7 @@ Future<bool> sendWhatsAppOTP(String phoneNumber, String otp) async {
       body: {
         'target': formattedPhone,
         'message': 'KODE OTP ANDA: $otp. Jangan berikan kode ini kepada siapapun demi keamanan akun Anda.',
-        'countryCode': '62', // Kode negara Indonesia
+        'countryCode': '62',
       },
     );
 
@@ -281,12 +282,6 @@ Future<bool> sendWhatsAppOTP(String phoneNumber, String otp) async {
   }
 }
 
-      // Get.snackbar(
-      //   "Sukses",
-      //   "Kode OTP baru telah dikirim",
-      //   backgroundColor: Colors.green,
-      //   colorText: Colors.white,
-      // );    
   Future<void> verifyOtp(String inputOtp) async {
     try {
       final user = _auth.currentUser;
@@ -352,18 +347,15 @@ Future<bool> sendWhatsAppOTP(String phoneNumber, String otp) async {
   // ================== LOGOUT ==================
   Future<void> signOut() async {
   try {
-    // 1. Panggil fungsi pembersihan di HomeController sebelum session hancur
     if (Get.isRegistered<HomeController>()) {
-      Get.find<HomeController>().stopMonitoring(); // Matikan stream & timer
-      Get.delete<HomeController>(force: true); // Hapus paksa dari memori
+      Get.find<HomeController>().stopMonitoring();
+      Get.delete<HomeController>(force: true);
     }
 
-    // 2. Logout dari Firebase & Provider
     await GoogleSignIn().signOut();
     await FacebookAuth.instance.logOut();
     await _auth.signOut();
 
-    // 3. Bersihkan field dan pindah halaman
     clearFields();
     Get.offAllNamed(Routes.LOGIN); 
     

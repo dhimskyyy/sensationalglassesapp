@@ -14,114 +14,100 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Menggunakan warna tema yang sudah konsisten di aplikasi Anda    
-    const Color backgroundColor = Color(0xFFF8FAFC);
-    
+
     // Inisialisasi controller
     final HomeController homeC = Get.find<HomeController>();
     final AuthController authC = Get.find<AuthController>();
     final user = FirebaseAuth.instance.currentUser;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-      ),
-      child: Scaffold(
-        backgroundColor: backgroundColor,
-        appBar: AppBar(
-          backgroundColor: backgroundColor,
-          elevation: 0,
-          centerTitle: true,
-          // Tombol back dihapus karena ini adalah tab utama di Bottom Nav
-          title: const Text(
-            'Profile',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-        ),
-        body: SingleChildScrollView(
+    return Scaffold(
+        backgroundColor: AppColors.white,
+        body: SafeArea(
+          child: SingleChildScrollView(
           child: Column(
             children: [
+              const SizedBox(height: 14),
               // --- Profile Header Section ---
-              const SizedBox(height: 24),
               Center(
-                child: Column(
-                  children: [
-                    Stack(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppColors.mint.withOpacity(0.2),
-                              width: 4,
-                            ),
-                          ),
-                          // Di profile_screen.dart, bagian Header Profil
-child: ClipOval(
-  child: Obx(() {
-    // GUNAKAN data user dari HomeController
-    String? userPhoto = homeC.userPhotoUrl.value; 
-    return (userPhoto.isNotEmpty)
-        ? CachedNetworkImage(
-            imageUrl: "$userPhoto?t=${DateTime.now().millisecondsSinceEpoch}", // Cache busting
-            width: 120, height: 120, fit: BoxFit.cover,
-            fadeInDuration: Duration.zero,
-            placeholder: (context, url) => Container(color: Colors.transparent),
-            errorWidget: (context, url, error) => const Icon(Icons.person, size: 60),
-          )
-        : Image.asset('assets/default_profile.png', width: 120, height: 120, fit: BoxFit.cover);
-  }),
-),
-                        ),
-                        Positioned(
-                          bottom: 5,
-                          right: 5,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
+                  child: Column(
+                    children: [
+                      Stack(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: AppColors.mint,
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
+                              border: Border.all(
+                                color: AppColors.mint.withOpacity(0.2),
+                                width: 4,
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.verified_user, // Mengganti kamera menjadi verified (opsional)
-                              color: Colors.white,
-                              size: 16,
+                            child: ClipOval(
+                              child: Obx(() {
+                                String userPhoto = homeC.userPhotoUrl.value;
+                                return (userPhoto.isNotEmpty)
+                                    ? CachedNetworkImage(
+                                        // PERBAIKAN: Hapus "?t=..." agar Cache bekerja instan
+                                        imageUrl: userPhoto, 
+                                        width: 120,
+                                        height: 120,
+                                        fit: BoxFit.cover,
+                                        fadeInDuration: const Duration(milliseconds: 100),
+                                        // Gunakan Shimmer atau Widget yang lebih ringan sebagai placeholder
+                                        placeholder: (context, url) =>
+                                            const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                        errorWidget: (context, url, error) =>
+                                            const Icon(Icons.person, size: 60),
+                                      )
+                                    : Image.asset(
+                                        'assets/default_profile.png',
+                                        width: 120,
+                                        height: 120,
+                                        fit: BoxFit.cover,
+                                      );
+                              }),
                             ),
                           ),
+                          // Badge Verified
+                          Positioned(
+                            bottom: 5,
+                            right: 5,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppColors.mint,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              child: const Icon(
+                                Icons.verified,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Obx(() => Text(
+                        homeC.userName.value,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Nama User (Admin) dari HomeController
-                    Obx(() => Text(
-                      homeC.userName.value,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
+                      )),
+                      Text(
+                        user?.email ?? "email@app.com",
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                        ),
                       ),
-                    )),
-                    Text(
-                      user?.email ?? "email@app.com",
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
+                    ],
+                  ),
+                ),     
+              const SizedBox(height: 32),
 
               // --- Account Settings Group ---
               _buildSectionHeader('Data Monitor'),
@@ -164,41 +150,36 @@ child: ClipOval(
                   isLast: true,
                 ),
               ]),
-
-              // --- Logout Section ---
-              // --- Logout Section ---
-Padding(
-  padding: const EdgeInsets.all(24),
-  child: Column(
-    children: [
-      SizedBox(
-        width: double.infinity,
-        child: OutlinedButton.icon(
-          onPressed: () => authC.signOut(), 
-          icon: const Icon(Icons.logout),
-          label: const Text('Logout'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.redAccent,
-            backgroundColor: Colors.red.withOpacity(0.05),
-            side: BorderSide(color: Colors.red.withOpacity(0.1)),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-        ),
-      ),
-      // PERBAIKAN: Hilangkan teks versi dan ganti dengan jarak (SizedBox)
-      // Tinggi 100 ini memastikan konten terdorong ke atas sehingga tidak tertutup nav bar
-      const SizedBox(height: 100), 
-    ],
-  ),
-),
+              
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => authC.signOut(),
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Logout'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                          backgroundColor: Colors.red.withOpacity(0.05),
+                          side: BorderSide(color: Colors.red.withOpacity(0.1)),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
-      ),
-    );
+        ),
+      );
   }
 
   Widget _buildSectionHeader(String title) {
@@ -247,9 +228,7 @@ Padding(
           border: isLast
               ? null
               : Border(
-                  bottom: BorderSide(
-                    color: primaryColor.withOpacity(0.05),
-                  ),
+                  bottom: BorderSide(color: primaryColor.withOpacity(0.05)),
                 ),
         ),
         child: Row(
@@ -277,19 +256,12 @@ Padding(
                   if (subtitle != null)
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                      ),
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              color: Colors.grey,
-              size: 20,
-            ),
+            const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
           ],
         ),
       ),

@@ -15,6 +15,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool _isPasswordHidden = true;
 
+  final AuthController authC = Get.find<AuthController>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -26,14 +27,12 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.white,
         body: Stack(
           children: [
-            // Header mint container
             Container(height: 500, color: AppColors.mint),
-
-            // Main content
             SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+  child: SingleChildScrollView(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
                   // HEADER
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
@@ -77,7 +76,11 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(width: 8),
                             GestureDetector(
-                              onTap: () => Get.toNamed('/register'),
+                              onTap: () {
+                                FocusScope.of(context).unfocus();
+                                authC.clearFields();
+                                Get.toNamed('/register');
+                              },
                               child: const Text(
                                 'Daftar',
                                 style: TextStyle(
@@ -96,8 +99,7 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 20),
 
                   // WHITE FORM
-                  Expanded(
-                    child: Container(
+                  Container(
                       width: double.infinity,
                       padding: const EdgeInsets.fromLTRB(30, 24, 30, 16),
                       decoration: const BoxDecoration(
@@ -114,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
 
                           const SizedBox(height: 6),
                           TextFormField(
-                            controller: emailController,
+                            controller: authC.emailController,
                             decoration: _inputDecoration(),
                           ),
                           const SizedBox(height: 12),
@@ -123,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
                           const Text('Password', style: AppTextStyles.label),
                           const SizedBox(height: 6),
                           TextFormField(
-                            controller: passwordController,
+                            controller: authC.passwordController,
                             obscureText: _isPasswordHidden,
                             decoration: _inputDecoration().copyWith(
                               suffixIcon: IconButton(
@@ -159,14 +161,14 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-                          const Spacer(),
+                          const SizedBox(height: 80),
                           // LOGIN BUTTON
                           SizedBox(
                             height: 48,
                             child: ElevatedButton(
                               onPressed: () {
-                                final email = emailController.text.trim();
-                                final password = passwordController.text.trim();
+                                final email = authC.emailController.text.trim();
+                                final password = authC.passwordController.text.trim();
 
                                 if (email.isEmpty && password.isEmpty) {
                                   Get.snackbar(
@@ -323,9 +325,9 @@ class _LoginPageState extends State<LoginPage> {
                         ],
                       ),
                     ),
-                  ),
                 ],
               ),
+  ),
             ),
           ],
         ),

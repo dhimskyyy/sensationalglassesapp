@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:sensationalglassesapp/app/theme/app_text_styles.dart';
+import '../controllers/home_controller.dart';
 import 'input_data_tunanetra_page.dart';
 import '../app/theme/app_colors.dart';
 
@@ -11,12 +13,10 @@ class IdCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color neutralDark = Color(0xFF224942);
-
     String uid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.white,
       appBar: AppBar(
         elevation: 0,
         leading: IconButton(
@@ -27,13 +27,9 @@ class IdCard extends StatelessWidget {
           ),
           onPressed: () => Get.back(),
         ),
-        title: const Text(
-          "Digital ID Card",
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Text(
+          "ID Card",
+          style: AppTextStyles.appBarTitle
         ),
         centerTitle: true,
       ),
@@ -54,7 +50,7 @@ class IdCard extends StatelessWidget {
             return const Center(
               child: Text(
                 "Data tidak ditemukan",
-                style: TextStyle(color: Colors.black),
+                style: AppTextStyles.normal
               ),
             );
 
@@ -197,9 +193,9 @@ class IdCard extends StatelessWidget {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: neutralDark.withOpacity(0.5),
+                            color: AppColors.neutralDark.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: neutralDark),
+                            border: Border.all(color: AppColors.neutralDark),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -335,20 +331,131 @@ class IdCard extends StatelessWidget {
   }
 
   void _confirmDelete(String uid) {
-    Get.defaultDialog(
-      title: "Hapus Data",
-      middleText: "Apakah Anda yakin ingin menghapus data tunanetra ini?",
-      textConfirm: "Hapus",
-      textCancel: "Batal",
-      confirmTextColor: Colors.white,
-      buttonColor: AppColors.error,
-      onConfirm: () async {
-        await FirebaseFirestore.instance
-            .collection("tunanetra_data")
-            .doc(uid)
-            .delete();
-        Get.back();
-      },
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon Peringatan
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_forever_rounded,
+                  color: Colors.redAccent,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // Judul
+              const Text(
+                "Hapus Data?",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              // Deskripsi
+              const Text(
+                "Tindakan ini tidak dapat dibatalkan. Semua data tunanetra yang tersimpan akan dihapus secara permanen.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+              
+              // Tombol Aksi
+              Row(
+                children: [
+                  // Tombol Batal
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        "Batal",
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  
+                  // Tombol Hapus
+                  Expanded(
+  child: ElevatedButton(
+    onPressed: () async {
+      // 1. Hapus data dari Firestore
+      await FirebaseFirestore.instance
+          .collection("tunanetra_data")
+          .doc(uid)
+          .delete();
+
+      // 2. Reset data di HomeController agar tampilan Home langsung berubah
+      if (Get.isRegistered<HomeController>()) {
+        Get.find<HomeController>().resetIoTData();
+      }
+
+      // 3. Kembali ke halaman sebelumnya
+      Get.back();
+
+      // 4. Beri notifikasi
+      Get.snackbar(
+        "Berhasil",
+        "Data telah dihapus",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.black87,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(20),
+      );
+    },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        "Hapus",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false, // User wajib memilih salah satu tombol
     );
   }
 }

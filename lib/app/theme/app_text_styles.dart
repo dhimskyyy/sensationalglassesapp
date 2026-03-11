@@ -15,7 +15,12 @@ class AppTextStyles {
   );
 
   static const TextStyle subtitle = TextStyle(
-    color: Colors.white,
+    color: AppColors.white,
+    fontSize: 14,
+  );
+
+  static const TextStyle normal = TextStyle(
+    color: AppColors.black,
     fontSize: 14,
   );
 
@@ -30,4 +35,10 @@ class AppTextStyles {
     fontWeight: FontWeight.w700,
     color: Colors.white,
   );
+
+  static const TextStyle appBarTitle = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  );  
 }

@@ -108,6 +108,26 @@ class HomeController extends GetxController {
     });
   }
 
+  // Tambahkan fungsi ini di dalam class HomeController
+void resetIoTData() {
+  // Hentikan timer dan subscription aktif
+  _timer?.cancel();
+  _iotSubscription?.cancel();
+  
+  // Reset nilai IoT ke default
+  signal.value = "Wait...";
+  battery.value = "0";
+  distance.value = "0";
+  latitude.value = 0.0;
+  longitude.value = 0.0;
+  
+  // Reset status data tunanetra
+  hasTunanetraData.value = false;
+  tunanetraData.clear();
+  
+  print("IoT Data has been reset successfully.");
+}
+
   Future<void> fetchThingSpeakData(String id, String key) async {
   try {
     final url = "https://api.thingspeak.com/channels/$id/feeds.json?api_key=$key&results=1";
@@ -118,21 +138,16 @@ class HomeController extends GetxController {
       if (data['feeds'] != null && data['feeds'].isNotEmpty) {
         final lastFeed = data['feeds'][0];
 
-        // 1. Ambil koordinat alat (Field 1 & 2)
         double devLat = double.tryParse(lastFeed['field1']?.toString() ?? "0.0") ?? 0.0;
         double devLng = double.tryParse(lastFeed['field2'] ?? "0.0") ?? 0.0;
         
         latitude.value = devLat;
         longitude.value = devLng;
 
-        // 2. Tampilkan jumlah satelit di bagian Signal (Field 3)
-        signal.value = "${lastFeed['field3'] ?? '0'} Dbm";
+        signal.value = "${lastFeed['field3'] ?? '0'} dBm";
 
-        // 3. Baterai set ke N/A (karena alat belum kirim data baterai)
-        battery.value = "N/A";
+        battery.value = "${lastFeed['field4'] ?? '0'}";
 
-        // 4. HITUNG JARAK (Distance) - WAJIB MENGGUNAKAN GEOLOCATOR
-        // Ini yang membuat jarak jadi akurat antara HP dan Alat
         calculateRealDistance(devLat, devLng);
       }
     }
@@ -143,11 +158,49 @@ class HomeController extends GetxController {
 
 // Fungsi tambahan untuk menghitung jarak asli
 Future<void> calculateRealDistance(double devLat, double devLng) async {
-  Position userPos = await Geolocator.getCurrentPosition();
-  double distanceInMeters = Geolocator.distanceBetween(
-    userPos.latitude, userPos.longitude, devLat, devLng
-  );
-  distance.value = distanceInMeters.toStringAsFixed(1); // Jarak dalam meter
+  try {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // 1. Cek apakah GPS di HP aktif
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      print("Layanan lokasi tidak aktif.");
+      return;
+    }
+
+    // 2. Cek status izin saat ini
+    permission = await Geolocator.checkPermission();
+    
+    // 3. Jika izin ditolak, minta izin baru ke user
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print("Izin lokasi ditolak oleh pengguna.");
+        return;
+      }
+    }
+
+    // 4. Jika izin ditolak selamanya (lewat settings)
+    if (permission == LocationPermission.deniedForever) {
+      print("Izin lokasi ditolak secara permanen.");
+      return;
+    }
+
+    // 5. Jika semua OK, baru ambil posisi
+    Position userPos = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+    
+    double distanceInMeters = Geolocator.distanceBetween(
+      userPos.latitude, userPos.longitude, devLat, devLng
+    );
+    
+    distance.value = distanceInMeters.toStringAsFixed(1);
+    
+  } catch (e) {
+    print("Error pada kalkulasi jarak: $e");
+  }
 }
 
   // Di dalam home_controller.dart

@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:sensationalglassesapp/app/theme/app_text_styles.dart';
 import 'dart:io';
 import 'dart:math';
 import '../controllers/home_controller.dart';
@@ -25,7 +26,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   final TextEditingController firstNameC = TextEditingController();
   final TextEditingController lastNameC = TextEditingController();
-  final TextEditingController emailC = TextEditingController(); // Field Baru
+  final TextEditingController emailC = TextEditingController();
   final TextEditingController phoneC = TextEditingController();
   final TextEditingController birthDateC = TextEditingController();
 
@@ -37,7 +38,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   void initState() {
     super.initState();
-    // Pisahkan nama dari userName user (bukan tunanetra)
     var nameParts = homeC.userName.value.split(" ");
     firstNameC.text = nameParts.isNotEmpty ? nameParts[0] : "";
     lastNameC.text = nameParts.length > 1 ? nameParts.sublist(1).join(" ") : "";
@@ -46,20 +46,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
     phoneC.text = homeC.userPhone.value;
     birthDateC.text = homeC.userBirthDate.value;
 
-    // AMBIL URL FOTO DARI KOLEKSI 'users', BUKAN 'tunanetra_data'
-    // Pastikan HomeController sudah memantau field 'photoUrl' di koleksi users
     _existingPhotoUrl = homeC.userPhotoUrl.value;
   }
 
-  // Fitur Pilih Foto (Galeri & Kamera)
-  // Fitur Pilih Foto (Galeri & Kamera)
   Future<void> _showImagePickerOptions() async {
     Get.bottomSheet(
       Container(
         padding: const EdgeInsets.all(16),
-        // Hapus baris 'color: Colors.white,' dari sini
         decoration: const BoxDecoration(
-          color: Colors.white, // PINDAHKAN WARNA KE SINI
+          color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Wrap(
@@ -95,7 +90,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
       setState(() => _selectedImage = File(pickedFile.path));
   }
 
-  // Simulasi Pengiriman OTP Nomor Telepon
   void _verifyPhoneNumber() {
     if (phoneC.text.isEmpty) {
       Get.snackbar(
@@ -305,8 +299,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          "Edit My Profile",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          "Edit Profile",
+          style: AppTextStyles.appBarTitle
         ),
         centerTitle: true,
         elevation: 0,
@@ -331,21 +325,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       ),
                     ),
                     child: Obx(() {
-                      // Ambil URL langsung dari memori controller
                       String userPhoto = homeC.userPhotoUrl.value;
 
                       return CircleAvatar(
-                        radius: 65,
-                        backgroundColor: Colors.grey[200],
-                        backgroundImage: _selectedImage != null
-                            ? FileImage(_selectedImage!)
-                            : (userPhoto.isNotEmpty)
-                            ? CachedNetworkImageProvider(
-                                "$userPhoto?t=${DateTime.now().millisecondsSinceEpoch}",
-                              )
-                            : const AssetImage('assets/default_profile.png')
-                                  as ImageProvider, // 3. Default
-                      );
+    radius: 65,
+    backgroundColor: Colors.grey[200],
+    backgroundImage: _selectedImage != null
+        ? FileImage(_selectedImage!)
+        : (userPhoto.isNotEmpty)
+            ? CachedNetworkImageProvider(userPhoto)
+            : const AssetImage('assets/default_profile.png') as ImageProvider,
+  );
                     }),
                   ),
                   Positioned(
@@ -390,16 +380,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
               isReadOnly: true,
             ),
 
-            // Nomor Telepon dengan Tombol Verifikasi
             _buildPhoneField(),
 
-            // Di dalam Column pada widget build
             _buildProfessionalField(
               "Tanggal Lahir",
               birthDateC,
               Icons.calendar_today_outlined,
-              onTap: _pickDate, // Panggil fungsi kalender saat diklik
-              isReadOnly: true, // Mencegah keyboard muncul
+              onTap: _pickDate,
+              isReadOnly: true,
             ),
 
             const SizedBox(height: 40),

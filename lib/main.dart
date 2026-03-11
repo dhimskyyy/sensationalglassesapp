@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart';
+import 'package:sensationalglassesapp/app/theme/app_colors.dart';
 
 import 'controllers/auth_controller.dart';
 import 'app/routes/app_pages.dart';
@@ -41,7 +42,7 @@ class MyApp extends StatelessWidget {
 
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: Color(0xFF70CAB0),
+        colorSchemeSeed: AppColors.white,
       ),
     );
   }

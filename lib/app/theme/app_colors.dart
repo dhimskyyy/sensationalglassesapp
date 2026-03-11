@@ -4,6 +4,7 @@ class AppColors {
   static const Color mint = Color(0xFF70CAB0);
   static const Color idCard = Color(0xFF10352A);
   static const Color dark = Color(0xFF071836);
+  static const Color black = Color(0xFF000000);
 
   static const Color textPrimary = Color(0xFF2A274B);
   static const Color divider = Color(0xFFEEEEEE);

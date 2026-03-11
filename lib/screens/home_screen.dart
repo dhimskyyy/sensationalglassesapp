@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:sensationalglassesapp/app/theme/app_text_styles.dart';
 import 'package:sensationalglassesapp/screens/id_card.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/home_controller.dart';
@@ -90,7 +91,7 @@ Widget build(BuildContext context) {
                       )),
                       Text(
                         'Monitoring device status',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        style: AppTextStyles.normal.copyWith(color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -297,7 +298,6 @@ Widget _buildAlarmButton(Color primaryColor) {
     width: double.infinity,
     height: 56,
     child: Obx(() => ElevatedButton.icon(
-      // Jika isAlarmProcessing true, onPressed jadi null (tombol tidak bisa diklik/disabled)
       onPressed: homeC.isAlarmProcessing.value ? null : () => homeC.triggerAlarm(),
       style: ElevatedButton.styleFrom(
         backgroundColor: homeC.isAlarmProcessing.value ? Colors.grey : primaryColor,
