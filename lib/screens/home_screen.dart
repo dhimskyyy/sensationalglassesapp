@@ -48,6 +48,8 @@ Widget build(BuildContext context) {
   return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
     stream: FirebaseFirestore.instance.collection("users").doc(uid).snapshots(),
     builder: (context, userSnapshot) {
+
+      if (userSnapshot.hasError) return const SizedBox();
       // Ambil nama User
       var userData = userSnapshot.data?.data();
       String userName = userData != null
@@ -58,6 +60,8 @@ Widget build(BuildContext context) {
       return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance.collection("tunanetra_data").doc(uid).snapshots(),
         builder: (context, tunaSnapshot) {
+
+          if (tunaSnapshot.hasError) return const SizedBox();
           bool hasData = tunaSnapshot.hasData && tunaSnapshot.data!.data() != null;
           var tunanetraData = tunaSnapshot.data?.data();
 

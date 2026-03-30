@@ -28,6 +28,9 @@ class _InputDataTunanetraPageState extends State<InputDataTunanetraPage> {
   final TextEditingController thingSpeakReadKeyController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
+
+  bool _isObscureChannel = true;
+  bool _isObscureKey = true;
   
   File? _selectedImage;
   String? _existingFotoUrl;
@@ -395,6 +398,18 @@ CircleAvatar(
                   icon: Icons.router_outlined,
                   hint: "Contoh: 3239717",
                   keyboardType: TextInputType.number,
+                  obscureText: _isObscureChannel, // Gunakan variabel state
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isObscureChannel ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isObscureChannel = !_isObscureChannel;
+                      });
+                    },
+                  ),
                 ),
                 const SizedBox(height: 20),
                 _buildModernTextField(
@@ -402,6 +417,18 @@ CircleAvatar(
                   label: "Read API Key",
                   icon: Icons.vpn_key_outlined,
                   hint: "Masukkan API Key",
+                  obscureText: _isObscureKey, // Gunakan variabel state
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isObscureKey ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isObscureKey = !_isObscureKey;
+                      });
+                    },
+                  ),
                 ),
                 const SizedBox(height: 48),
 
@@ -474,6 +501,8 @@ CircleAvatar(
     required String hint,
     TextInputType keyboardType = TextInputType.text,
     bool autoUpperCase = false,
+    bool obscureText = false, // <-- TAMBAHKAN PARAMETER INI
+    Widget? suffixIcon,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -489,7 +518,9 @@ CircleAvatar(
         const SizedBox(height: 10),
         TextFormField(
           controller: controller,
+          obscureText: obscureText, // <-- TERAPKAN DI SINI
           keyboardType: keyboardType,
+          textAlignVertical: TextAlignVertical.center,
           style: const TextStyle(fontSize: 15),
           onChanged: (value) {
             if (autoUpperCase) {
@@ -503,6 +534,7 @@ CircleAvatar(
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey[400]),
             prefixIcon: Icon(icon, color: const Color(0xFF66C7AA), size: 22),
+            suffixIcon: suffixIcon,
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(
@@ -523,9 +555,9 @@ CircleAvatar(
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return "Bidang ini tidak boleh kosong"; // Pesan error di bawah field
+              return "Bidang ini tidak boleh kosong";
             }
-            return null; // Artinya valid
+            return null;
           },
         ),
       ],

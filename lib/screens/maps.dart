@@ -60,7 +60,7 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
         _polylines.add(
           Polyline(
             polylineId: const PolylineId("route"),
-            color: const Color(0xFF66C7AA), // Sesuaikan warna tema Anda
+            color: const Color(0xFF66C7AA),
             points: _polylineCoordinates,
             width: 5,
           ),
@@ -98,7 +98,7 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
         Placemark place = placemarks[0];
         // Format alamat yang lebih rapi
         address.value =
-            "${place.street}, ${place.subLocality}, ${place.locality}";
+            "${place.subLocality}, ${place.locality}";
       }
     } catch (e) {
       address.value = "Alamat tidak ditemukan";
@@ -268,14 +268,7 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
         onCameraMoveStarted: () => _onUserInteraction(),
         polylines: _polylines,
         markers: {
-           // Tambahkan marker untuk lokasi Anda (HP) agar rute terlihat jelas
-           Marker(
-              markerId: const MarkerId("user_hp"),
-              position: _currentDeviceLocation,
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-           ),
-           // Marker alat IoT (Sudah ada di kode Anda)
-           if (homeC.latitude.value != 0.0)
+          if (homeC.latitude.value != 0.0)
             Marker(
               markerId: const MarkerId("iot_device"),
               position: targetLoc,

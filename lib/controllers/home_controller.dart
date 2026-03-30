@@ -33,6 +33,7 @@ class HomeController extends GetxController {
   Timer? _timer;
   StreamSubscription? _iotSubscription;
   StreamSubscription? _userSubscription;
+  StreamSubscription? _stopSubscription;
 
   @override
   void onInit() {
@@ -59,10 +60,10 @@ class HomeController extends GetxController {
         userBirthDate.value = data?['birthDate'] ?? "";
         userPhotoUrl.value = data?['photoUrl'] ?? "";
       }
-    });
+    }, onError: (error) => print("User Stream ditutup karena logout"));
 
     // Monitor Data Tunanetra (Termasuk Foto)
-    FirebaseFirestore.instance
+    _stopSubscription = FirebaseFirestore.instance
         .collection("tunanetra_data")
         .doc(user.uid)
         .snapshots()
@@ -73,7 +74,7 @@ class HomeController extends GetxController {
       } else {
         hasTunanetraData.value = false;
       }
-    });
+    }, onError: (error) => print("Tunanetra Stream ditutup karena logout")); 
   }
 
   void setupRealtimeIoT() {    
@@ -281,7 +282,8 @@ Future<void> triggerAlarm() async {
   void stopMonitoring() {
   _timer?.cancel();
   _iotSubscription?.cancel();
-  _userSubscription?.cancel(); // Pindahkan ke sini agar sekalian berhenti
+  _userSubscription?.cancel();
+  _stopSubscription?.cancel();
   print("Semua monitoring (IoT & Profil) berhasil dihentikan");
 }
 
