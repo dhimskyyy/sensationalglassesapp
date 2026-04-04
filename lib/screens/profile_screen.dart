@@ -97,13 +97,31 @@ class ProfileScreen extends StatelessWidget {
                           letterSpacing: -0.5,
                         ),
                       )),
-                      Text(
-                        user?.email ?? "email@app.com",
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
-                      ),
+                      
+                      // PERBAIKAN: Email dibungkus Obx dan digabungkan logikanya
+                      Obx(() {
+                        // 1. Tembak dari inti Firebase Auth dulu
+                        String validEmail = user?.email ?? "";
+                        
+                        // 2. Jika dari Auth kosong (kasus FB), tarik dari Database
+                        if (validEmail.isEmpty) {
+                          validEmail = homeC.userEmail.value;
+                        }
+                        
+                        // 3. Fallback jika memang masih loading
+                        if (validEmail.isEmpty) {
+                          validEmail = "Memuat email...";
+                        }
+
+                        return Text(
+                          validEmail,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        );
+                      }),
+                      
                     ],
                   ),
                 ),     

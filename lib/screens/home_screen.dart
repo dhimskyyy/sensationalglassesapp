@@ -3,6 +3,10 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:sensationalglassesapp/app/theme/app_text_styles.dart';
 import 'package:sensationalglassesapp/screens/id_card.dart';
 import '../controllers/auth_controller.dart';
@@ -24,118 +28,300 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   final HomeController homeC = Get.put(HomeController());
   final AuthController authC = Get.find<AuthController>();
 
+  GoogleMapController? _mapController;
+  LatLng _currentDeviceLocation = const LatLng(-6.2088, 106.8456);
+
   @override
   void initState() {
     super.initState();
+    _initLocationService();
     _radarController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat();
+    ever(homeC.latitude, (double lat) {
+      if (lat != 0.0 && _mapController != null) {
+        _mapController!.animateCamera(
+          CameraUpdate.newLatLng(LatLng(lat, homeC.longitude.value))
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     _radarController.dispose();
     super.dispose();
+    _mapController?.dispose();
+  }
+
+  Future<void> _initLocationService() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+
+    if (permission == LocationPermission.deniedForever) return;
+
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    if (mounted) {
+      setState(() {
+        _currentDeviceLocation = LatLng(position.latitude, position.longitude);
+      });
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLng(_currentDeviceLocation),
+      );
+    }
   }
 
 @override
 Widget build(BuildContext context) {
-  const Color primaryColor = Color(0xFF66C7AA);
-  String uid = FirebaseAuth.instance.currentUser!.uid;
+    const Color primaryColor = Color(0xFF66C7AA);
+    
+    // Jaring pengaman logout (Menghindari error saat currentUser null)
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF8FAFC),
+        body: Center(child: CircularProgressIndicator(color: primaryColor)),
+      );
+    }
+    
+    String uid = user.uid;
 
-  // Stream 1: Mengambil Data Profil User (Admin) yang sedang login
-  return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-    stream: FirebaseFirestore.instance.collection("users").doc(uid).snapshots(),
-    builder: (context, userSnapshot) {
+    // Stream 1: Mengambil Data Profil User (Admin) yang sedang login
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection("users").doc(uid).snapshots(),
+      builder: (context, userSnapshot) {
+        if (userSnapshot.hasError) return const SizedBox();
 
-      if (userSnapshot.hasError) return const SizedBox();
-      // Ambil nama User
-      var userData = userSnapshot.data?.data();
-      String userName = userData != null
-          ? "${userData['firstName'] ?? ''} ${userData['lastName'] ?? ''}".trim()
-          : "User";
+        // Stream 2: Mengambil Data Tunanetra (untuk isi Card)
+        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance.collection("tunanetra_data").doc(uid).snapshots(),
+          builder: (context, tunaSnapshot) {
+            if (tunaSnapshot.hasError) return const SizedBox();
+            
+            bool hasData = tunaSnapshot.hasData && tunaSnapshot.data!.data() != null;
+            var tunanetraData = tunaSnapshot.data?.data();
 
-      // Stream 2: Mengambil Data Tunanetra (untuk isi Card)
-      return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance.collection("tunanetra_data").doc(uid).snapshots(),
-        builder: (context, tunaSnapshot) {
+            // Tampilan Loading jika stream utama belum siap
+            if (userSnapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator(color: primaryColor)),
+              );
+            }
 
-          if (tunaSnapshot.hasError) return const SizedBox();
-          bool hasData = tunaSnapshot.hasData && tunaSnapshot.data!.data() != null;
-          var tunanetraData = tunaSnapshot.data?.data();
-
-          // Tampilan Loading jika stream utama belum siap
-          if (userSnapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator(color: primaryColor)),
-            );
-          }
-
-          return Scaffold(
-            backgroundColor: const Color(0xFFF8FAFC),
-            body: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                Expanded(
+            return Scaffold(
+              backgroundColor: const Color(0xFFF8FAFC),
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Obx(() => Text(
-                        'Halo, ${homeC.userName.value}',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      )),
-                      Text(
-                        'Monitoring device status',
-                        style: AppTextStyles.normal.copyWith(color: Colors.grey[600]),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Obx(() => Text(
+                                  'Halo, ${homeC.userName.value}',
+                                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                )),
+                                Text(
+                                  'Monitoring device status',
+                                  style: AppTextStyles.normal.copyWith(color: Colors.grey[600]),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: () => authC.signOut(),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(color: primaryColor, shape: BoxShape.circle),
+                              child: const Icon(Icons.logout, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 24),
+
+                      _buildDeviceCard(primaryColor, hasData, tunanetraData),
+
+                      const SizedBox(height: 24),
+
+                      // MAPS / RADAR CARD
+                      _buildRadarOrMapCard(primaryColor),
+
+                      const SizedBox(height: 24),
+
+                      // Activate Alarm Button
+                      _buildAlarmButton(primaryColor),
+
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: () => authC.signOut(),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(color: primaryColor, shape: BoxShape.circle),
-                    child: const Icon(Icons.logout, color: Colors.white, size: 20),
-                  ),
-                ),
-              ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildRadarOrMapCard(Color primaryColor) {
+    return Obx(() {
+      // KONDISI 1: JIKA DATA BELUM ADA ATAU LOKASI BELUM DITEMUKAN (Tampilkan Animasi Radar)
+      if (!homeC.hasTunanetraData.value || homeC.latitude.value == 0.0) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.grey.shade100),
+            image: const DecorationImage(
+              image: AssetImage('assets/maps.png'),
+              fit: BoxFit.cover,
+              opacity: 0.1,
             ),
-                    const SizedBox(height: 24),
-
-                    _buildDeviceCard(primaryColor, hasData, tunanetraData),
-
-                    const SizedBox(height: 24),
-
-                    // Radar Card
-                    _buildRadarCard(primaryColor),
-
-                    const SizedBox(height: 24),
-
-                    // Activate Alarm Button
-                    _buildAlarmButton(primaryColor),
-
-                    const SizedBox(height: 20),
+          ),
+          child: Column(
+            children: [
+              SizedBox(
+                height: 120, width: 120,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    AnimatedBuilder(
+                      animation: _radarController,
+                      builder: (context, child) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: primaryColor.withOpacity(1 - _radarController.value), width: 2),
+                          ),
+                          width: 120 * _radarController.value,
+                          height: 120 * _radarController.value,
+                        );
+                      },
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: primaryColor.withOpacity(0.2), width: 1),
+                      ),
+                      child: const Icon(Icons.explore, color: AppColors.mint, size: 40),
+                    ),
                   ],
                 ),
               ),
+              const SizedBox(height: 24),
+              const Text('Mencari perangkat...', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text(
+                'Please wait while we establish a secure\nconnection with the tracker.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              ),
+              TextButton.icon(
+                onPressed: () => homeC.setupRealtimeIoT(),
+                icon: const Icon(Icons.refresh, size: 18, color: AppColors.mint),
+                label: const Text('Refresh Sinyal', style: TextStyle(color: AppColors.mint)),
+              ),
+            ],
+          ),
+        );
+      } 
+      
+      // KONDISI 2: JIKA LOKASI SUDAH TERDETEKSI (Tampilkan Peta Google Maps Mini)
+      else {
+        LatLng targetLoc = LatLng(homeC.latitude.value, homeC.longitude.value);
+
+        // Update kamera jika ada perubahan lokasi IoT
+        // if (_mapController != null) {
+        //   _mapController!.animateCamera(CameraUpdate.newLatLng(targetLoc));
+        // }
+
+        return Container(
+          height: 320, // Tinggi mini map di home
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.grey.shade200, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              )
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: Stack(
+              children: [
+                GoogleMap(
+                  initialCameraPosition: CameraPosition(target: targetLoc, zoom: 16),
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false, // Disembunyikan agar UI rapi
+                  zoomControlsEnabled: false, // Disembunyikan agar UI rapi
+                  mapToolbarEnabled: false,
+                  // Mengizinkan user menggeser map meskipun di dalam ScrollView
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer()),
+                  },
+                  onMapCreated: (controller) => _mapController = controller,
+                  markers: {
+                    Marker(
+                      markerId: const MarkerId("iot_device"),
+                      position: targetLoc,
+                      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
+                      infoWindow: const InfoWindow(title: "Lokasi Tunanetra"),
+                    ),
+                  },
+                ),
+                // Tombol "Buka Layar Penuh" melayang di atas peta
+                Positioned(
+                  bottom: 15,
+                  right: 15,
+                  child: FloatingActionButton.small(
+                    heroTag: "btn_fullscreen_map",
+                    backgroundColor: Colors.white,
+                    child: const Icon(Icons.fullscreen, color: AppColors.mint),
+                    onPressed: () {
+                      // Ini akan berguna jika kamu punya navigasi bottom bar untuk pindah tab,
+                      // Jika tidak, bisa kamu arahkan Get.to() ke halaman MapsScreen.
+                      // Contoh: Get.to(() => const MapsScreen());
+                    },
+                  ),
+                )
+              ],
             ),
-          );
-        },
-      );
-    },
-  );
-}
+          ),
+        );
+      }
+    });
+  }
 
 Widget _buildDeviceCard(Color primaryColor, bool hasData, Map<String, dynamic>? data) {
   String formattedDate = "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}";
@@ -226,24 +412,24 @@ GestureDetector(
   crossAxisCount: 2,
   childAspectRatio: 2.5,
   children: [
-    _buildStatItem(Icons.calendar_today, 'Date', formattedDate),
+    _buildStatItem(Icons.calendar_today, 'Tanggal', formattedDate),
 
     // Signal: Menampilkan "Tidak Terdeteksi" jika isDeviceOff true
     _buildStatItem(
       Icons.signal_cellular_alt, 
-      'Signal', 
+      'Sinyal', 
       homeC.signal.value
     ),
 
     // Battery: Menampilkan % dan icon berubah jika lowbat
     _buildStatItem(
       homeC.iotStatus.value == "Lowbat" ? Icons.battery_alert : Icons.battery_full, 
-      'Battery', 
+      'Baterai', 
       "${homeC.battery.value}%"
     ),
 
     // Distance: Tetap menampilkan nilai terakhir
-    _buildStatItem(Icons.straighten, 'Distance', "${homeC.distance.value} m"),
+    _buildStatItem(Icons.straighten, 'Jarak', "${homeC.distance.value} m"),
   ],
 )),
       ],
@@ -298,7 +484,7 @@ GestureDetector(
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Locating device...', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text('Mencari perangkat...', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(
             'Please wait while we establish a secure\nconnection with the tracker.',

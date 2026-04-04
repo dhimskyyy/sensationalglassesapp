@@ -173,28 +173,24 @@ class AuthController extends GetxController {
         idToken: googleAuth.idToken,
       );
 
-      final userCredential =
-          await _auth.signInWithCredential(credential);
+      final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user;
 
       if (user == null) return;
 
-      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
-        final names = user.displayName?.split(' ') ?? [];
-        await _firestore.collection('users').doc(user.uid).set({
-          "uid": user.uid,
-          "firstName": names.isNotEmpty ? names.first : "User",
-          "lastName": names.length > 1 ? names.last : "",
-          "email": user.email,
-          "phone": user.phoneNumber ?? "",
-          "createdAt": DateTime.now(),
-          "is_verified": true,
-        });
-      } else {
-        await _firestore.collection('users').doc(user.uid).update({
-          "is_verified": true,
-        });
-      }
+      final names = user.displayName?.split(' ') ?? [];
+      final firstName = names.isNotEmpty ? names.first : "User";
+      final lastName = names.length > 1 ? names.sublist(1).join(' ') : "";
+
+      await _firestore.collection('users').doc(user.uid).set({
+        "uid": user.uid,
+        "firstName": firstName,
+        "lastName": lastName,
+        // PERBAIKAN UTAMA: Ambil email murni dari Google, bukan Firebase
+        "email": googleUser.email, 
+        "photoUrl": user.photoURL ?? "",
+        "is_verified": true,
+      }, SetOptions(merge: true));
 
       Get.offAllNamed(Routes.MAIN);
     } catch (e) {
@@ -212,26 +208,29 @@ class AuthController extends GetxController {
         result.accessToken!.token,
       );
 
-      final userCredential =
-          await _auth.signInWithCredential(credential);
+      final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user;
 
       if (user == null) return;
 
-      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
-        await _firestore.collection('users').doc(user.uid).set({
-          "uid": user.uid,
-          "firstName": user.displayName?.split(' ').first ?? "User",
-          "lastName": "",
-          "email": user.email ?? "",
-          "createdAt": DateTime.now(),
-          "is_verified": true,
-        });
-      } else {
-        await _firestore.collection('users').doc(user.uid).update({
-          "is_verified": true,
-        });
+      final names = user.displayName?.split(' ') ?? [];
+      final firstName = names.isNotEmpty ? names.first : "User";
+      final lastName = names.length > 1 ? names.sublist(1).join(' ') : "";
+
+      // PERBAIKAN UTAMA: Ambil email murni dari Provider Data
+      String fbEmail = user.email ?? "";
+      if (fbEmail.isEmpty && user.providerData.isNotEmpty) {
+        fbEmail = user.providerData.first.email ?? "";
       }
+
+      await _firestore.collection('users').doc(user.uid).set({
+        "uid": user.uid,
+        "firstName": firstName,
+        "lastName": lastName,
+        "email": fbEmail, // Pakai email yang sudah diekstrak
+        "photoUrl": user.photoURL ?? "",
+        "is_verified": true,
+      }, SetOptions(merge: true));
 
       Get.offAllNamed(Routes.MAIN);
     } catch (e) {

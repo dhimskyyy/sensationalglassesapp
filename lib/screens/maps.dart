@@ -337,7 +337,7 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
         ),
         const SizedBox(height: 20),
         const Text(
-          'Locating device...',
+          'Mencari perangkat...',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
@@ -345,7 +345,7 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
           onPressed: () => homeC.setupRealtimeIoT(),
           icon: const Icon(Icons.refresh, color: AppColors.mint),
           label: const Text(
-            'Refresh Signal',
+            'Refresh Sinyal',
             style: TextStyle(
               color: AppColors.mint,
               fontWeight: FontWeight.bold,

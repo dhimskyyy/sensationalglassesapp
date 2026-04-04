@@ -1,4 +1,15 @@
-val mapsApiKey = project.findProperty("MAPS_API_KEY") as String?
+import java.util.Properties
+import java.io.FileInputStream
+
+// 1. Baca file .env dari folder root Flutter
+val envProperties = Properties()
+val envFile = rootProject.file("../.env")
+if (envFile.exists()) {
+    envProperties.load(FileInputStream(envFile))
+}
+
+// 2. Ambil nilai GOOGLE_MAPS_API_KEY dari .env
+val mapsApiKey = envProperties.getProperty("GOOGLE_MAPS_API_KEY")
 
 plugins {
     id("com.android.application")
@@ -23,8 +34,10 @@ android {
 
     defaultConfig {        
         applicationId = "com.example.sensationalglassesapp"
-        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
-        minSdk = 21
+        // 3. Masukkan ke manifestPlaceholders dengan penanganan null
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey ?: ""
+        
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
