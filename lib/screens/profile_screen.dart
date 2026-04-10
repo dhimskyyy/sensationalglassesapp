@@ -8,124 +8,127 @@ import '../controllers/auth_controller.dart';
 import '../app/routes/app_pages.dart';
 import '../app/theme/app_colors.dart';
 import 'edit_user_profile_page.dart';
+import 'about_app_page.dart';
+import 'help_support_page.dart';
+import 'notification_history_page.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-
     // Inisialisasi controller
     final HomeController homeC = Get.find<HomeController>();
     final AuthController authC = Get.find<AuthController>();
-    final user = FirebaseAuth.instance.currentUser;
+    FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-        backgroundColor: AppColors.white,
-        body: SafeArea(
-          child: SingleChildScrollView(
+      backgroundColor: AppColors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
           child: Column(
             children: [
               const SizedBox(height: 14),
-              // --- Profile Header Section ---
               Center(
-                  child: Column(
-                    children: [
-                      Stack(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
+                child: Column(
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.mint.withOpacity(0.2),
+                              width: 4,
+                            ),
+                          ),
+                          child: ClipOval(
+                            child: Obx(() {
+                              String userPhoto = homeC.userPhotoUrl.value;
+                              return (userPhoto.isNotEmpty)
+                                  ? CachedNetworkImage(
+                                      imageUrl: userPhoto,
+                                      width: 120,
+                                      height: 120,
+                                      fit: BoxFit.cover,
+                                      fadeInDuration: const Duration(
+                                        milliseconds: 100,
+                                      ),
+                                      placeholder: (context, url) =>
+                                          const Center(
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                      errorWidget: (context, url, error) =>
+                                          const Icon(Icons.person, size: 60),
+                                    )
+                                  : Image.asset(
+                                      'assets/default_profile.png',
+                                      width: 120,
+                                      height: 120,
+                                      fit: BoxFit.cover,
+                                    );
+                            }),
+                          ),
+                        ),
+                        // Badge Verified
+                        Positioned(
+                          bottom: 5,
+                          right: 5,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
+                              color: AppColors.mint,
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppColors.mint.withOpacity(0.2),
-                                width: 4,
-                              ),
+                              border: Border.all(color: Colors.white, width: 2),
                             ),
-                            child: ClipOval(
-                              child: Obx(() {
-                                String userPhoto = homeC.userPhotoUrl.value;
-                                return (userPhoto.isNotEmpty)
-                                    ? CachedNetworkImage(
-                                        // PERBAIKAN: Hapus "?t=..." agar Cache bekerja instan
-                                        imageUrl: userPhoto, 
-                                        width: 120,
-                                        height: 120,
-                                        fit: BoxFit.cover,
-                                        fadeInDuration: const Duration(milliseconds: 100),
-                                        // Gunakan Shimmer atau Widget yang lebih ringan sebagai placeholder
-                                        placeholder: (context, url) =>
-                                            const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                                        errorWidget: (context, url, error) =>
-                                            const Icon(Icons.person, size: 60),
-                                      )
-                                    : Image.asset(
-                                        'assets/default_profile.png',
-                                        width: 120,
-                                        height: 120,
-                                        fit: BoxFit.cover,
-                                      );
-                              }),
+                            child: const Icon(
+                              Icons.verified,
+                              color: Colors.white,
+                              size: 16,
                             ),
                           ),
-                          // Badge Verified
-                          Positioned(
-                            bottom: 5,
-                            right: 5,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: AppColors.mint,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
-                              ),
-                              child: const Icon(
-                                Icons.verified,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Obx(() => Text(
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Obx(() {
+                      return Text(
                         homeC.userName.value,
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
                         ),
-                      )),
-                      
-                      // PERBAIKAN: Email dibungkus Obx dan digabungkan logikanya
-                      Obx(() {
-                        // 1. Tembak dari inti Firebase Auth dulu
-                        String validEmail = user?.email ?? "";
-                        
-                        // 2. Jika dari Auth kosong (kasus FB), tarik dari Database
-                        if (validEmail.isEmpty) {
-                          validEmail = homeC.userEmail.value;
-                        }
-                        
-                        // 3. Fallback jika memang masih loading
-                        if (validEmail.isEmpty) {
-                          validEmail = "Memuat email...";
-                        }
+                      );
+                    }),
+                    Obx(() {
+                      final emailFromDb = homeC.userEmail.value;
+                      final emailFromAuth =
+                          FirebaseAuth.instance.currentUser?.email ?? "";
 
-                        return Text(
-                          validEmail,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                          ),
-                        );
-                      }),
-                      
-                    ],
-                  ),
-                ),     
-              const SizedBox(height: 32),
+                      String validEmail = emailFromDb.isNotEmpty
+                          ? emailFromDb
+                          : emailFromAuth;
+
+                      if (validEmail.isEmpty) {
+                        validEmail = "Memuat email...";
+                      }
+
+                      return Text(
+                        validEmail,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 22),
 
               // --- Account Settings Group ---
               _buildSectionHeader('Data Monitor'),
@@ -146,29 +149,29 @@ class ProfileScreen extends StatelessWidget {
                   primaryColor: AppColors.mint,
                   icon: Icons.history,
                   title: 'Riwayat Notifikasi',
-                  isLast: true,
+                  onTap: () => Get.to(() => const NotificationHistoryPage()),
                 ),
               ]),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 18),
 
               // --- App Settings Group ---
-              _buildSectionHeader('App Settings'),
+              _buildSectionHeader('Lainnya'),
               _buildSettingsContainer(AppColors.mint, [
                 _buildSettingTile(
                   primaryColor: AppColors.mint,
-                  icon: Icons.language,
-                  title: 'Language',
-                  subtitle: 'Indonesia (ID)',
+                  icon: Icons.info_outline,
+                  title: 'Tentang Aplikasi',
+                  onTap: () => Get.to(() => const AboutAppPage()),
                 ),
                 _buildSettingTile(
                   primaryColor: AppColors.mint,
-                  icon: Icons.help_outline,
-                  title: 'Help & Support',
-                  isLast: true,
+                  icon: Icons.support_agent,
+                  title: 'Bantuan & Dukungan',
+                  onTap: () => Get.to(() => const HelpSupportPage()),
                 ),
               ]),
-              
+
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
@@ -196,8 +199,8 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
         ),
-        ),
-      );
+      ),
+    );
   }
 
   Widget _buildSectionHeader(String title) {

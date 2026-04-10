@@ -75,7 +75,6 @@ class _RegisterPageState extends State<RegisterPage> {
         await user.sendEmailVerification();
 
         // 4. Simpan Data ke Firestore
-        // Note: Kita tidak menyimpan otp_code lagi di sini karena pakai Link
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           "uid": user.uid,
           "firstName": firstName.text.trim(),
@@ -167,29 +166,32 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         const SizedBox(height: 12),
                         Row(
-                          children: [
-                            const Text(
-                              'Sudah Punya Akun?',
-                              style: TextStyle(
-                                color: AppColors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: () => Get.back(),
-                              child: const Text(
-                                "Masuk",
+                            children: [
+                              const Text(
+                                'Sudah Punya Akun?',
                                 style: TextStyle(
-                                  decoration: TextDecoration.underline,
-                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.white,
                                   fontSize: 14,
-                                  color: AppColors.dark,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () {
+                                  FocusScope.of(context).unfocus(); // Matikan kursor
+                                  Get.offNamed(Routes.LOGIN); // Kembali dan hancurkan halaman ini
+                                },
+                                child: const Text(
+                                  "Masuk",
+                                  style: TextStyle(
+                                    decoration: TextDecoration.underline,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: AppColors.dark,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),

@@ -1,14 +1,12 @@
 import java.util.Properties
 import java.io.FileInputStream
 
-// 1. Baca file .env dari folder root Flutter
 val envProperties = Properties()
 val envFile = rootProject.file("../.env")
 if (envFile.exists()) {
     envProperties.load(FileInputStream(envFile))
 }
 
-// 2. Ambil nilai GOOGLE_MAPS_API_KEY dari .env
 val mapsApiKey = envProperties.getProperty("GOOGLE_MAPS_API_KEY")
 
 plugins {
@@ -26,6 +24,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -34,7 +33,6 @@ android {
 
     defaultConfig {        
         applicationId = "com.example.sensationalglassesapp"
-        // 3. Masukkan ke manifestPlaceholders dengan penanganan null
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey ?: ""
         
         minSdk = flutter.minSdkVersion
@@ -46,8 +44,6 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -58,13 +54,9 @@ flutter {
 }
 
 dependencies {
-    // Firebase BOM (wajib)
+    // Firebase BOM
     implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
-
-    // Untuk login Google & Facebook pakai Firebase Auth
     implementation("com.google.firebase:firebase-auth")
-
-    // Opsional
     implementation("com.google.firebase:firebase-analytics")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 }
-

@@ -76,20 +76,20 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(width: 8),
                             GestureDetector(
-                              onTap: () {
-                                FocusScope.of(context).unfocus();
-                                authC.clearFields();
-                                Get.toNamed('/register');
-                              },
-                              child: const Text(
-                                'Daftar',
-                                style: TextStyle(
-                                  color: AppColors.dark,
-                                  decoration: TextDecoration.underline,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                            onTap: () {
+                              FocusScope.of(context).unfocus(); // Matikan kursor
+                              authC.clearFields();
+                              Get.offNamed(Routes.REGISTER); // Pindah dengan menghancurkan halaman ini
+                            },
+                            child: const Text(
+                              'Daftar',
+                              style: TextStyle(
+                                color: AppColors.dark,
+                                decoration: TextDecoration.underline,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
+                          ),
                           ],
                         ),
                       ],
@@ -148,8 +148,10 @@ class _LoginPageState extends State<LoginPage> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () =>
-                                  Get.toNamed(Routes.FORGOT_PASSWORD),
+                              onPressed: () {
+                                FocusScope.of(context).unfocus(); // Matikan kursor
+                                Get.toNamed(Routes.FORGOT_PASSWORD); // Lupa password biarkan pakai toNamed saja
+                              },
                               style: TextButton.styleFrom(
                                 padding: EdgeInsets.zero,
                                 minimumSize: const Size(0, 30),

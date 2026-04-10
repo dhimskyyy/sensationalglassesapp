@@ -13,4 +13,7 @@ abstract class Routes {
   static const DATATUNANETRA = '/data-tunanetra';
   static const IDCARD = '/id-card';
   static const EDITUSERPROFILE = '/edit-user-profile';
+  static const ABOUTAPP = '/about-app-page';
+  static const HELP = '/help-support-page';
+  static const NOTIFICATION_HISTORY = '/notification-history';
 }

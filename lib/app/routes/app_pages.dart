@@ -4,13 +4,15 @@ import '../../screens/login_page.dart';
 import '../../screens/register_page.dart';
 import '../../screens/home_screen.dart';
 import '../../screens/forgot_password_page.dart';
-import '../../screens/code_verification.dart';
 import '../../screens/email_verification.dart';
 import '../../screens/maps.dart';
 import '../../screens/main_navigation.dart';
 import '../../screens/input_data_tunanetra_page.dart';
 import '../../screens/id_card.dart';
 import '../../screens/edit_user_profile_page.dart';
+import '../../screens/about_app_page.dart';
+import '../../screens/help_support_page.dart';
+import '../../screens/notification_history_page.dart';
 
 part 'app_routes.dart';
 
@@ -39,10 +41,6 @@ class AppPages {
   page: () => const ForgotPasswordPage(),
 ),
     GetPage(
-  name: Routes.VERIFICATIONPAGE,
-  page: () => const VerificationPage(),
-),
-    GetPage(
       name: Routes.EMAILVERIFICATIONPAGE,
       page: () => const EmailVerificationPage(),
     ),
@@ -65,6 +63,18 @@ class AppPages {
     GetPage(
       name: Routes.EDITUSERPROFILE,
       page: () => const UserProfilePage(),
+    ),
+    GetPage(
+      name: Routes.ABOUTAPP,
+      page: () => const AboutAppPage(),
+    ),
+    GetPage(
+      name: Routes.HELP,
+      page: () => const HelpSupportPage(),
+    ),
+    GetPage(
+      name: '/notification-history',
+      page: () => const NotificationHistoryPage(),
     ),
   ];
 }

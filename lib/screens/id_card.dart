@@ -28,10 +28,7 @@ class IdCard extends StatelessWidget {
           ),
           onPressed: () => Get.back(),
         ),
-        title: Text(
-          "ID Card",
-          style: AppTextStyles.appBarTitle
-        ),
+        title: Text("ID Card", style: AppTextStyles.appBarTitle),
         centerTitle: true,
       ),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -49,10 +46,7 @@ class IdCard extends StatelessWidget {
           var data = snapshot.data!.data();
           if (data == null)
             return const Center(
-              child: Text(
-                "Data tidak ditemukan",
-                style: AppTextStyles.normal
-              ),
+              child: Text("Data tidak ditemukan", style: AppTextStyles.normal),
             );
 
           return SingleChildScrollView(
@@ -187,58 +181,60 @@ class IdCard extends StatelessWidget {
                       // Status Chip
                       const SizedBox(height: 30),
                       // Status Chip
-const SizedBox(height: 30),
-Align(
-  alignment: Alignment.centerRight,
-  child: Obx(() {
-    // Tentukan warna berdasarkan status dari controller
-    Color statusColor;
-    String statusText = homeC.iotStatus.value.toUpperCase();
+                      const SizedBox(height: 30),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Obx(() {
+                          // Tentukan warna berdasarkan status dari controller
+                          Color statusColor;
+                          String statusText = homeC.iotStatus.value
+                              .toUpperCase();
 
-    if (homeC.iotStatus.value == "Active Now") {
-      statusColor = AppColors.mint;
-    } else if (homeC.iotStatus.value == "Lowbat") {
-      statusColor = Colors.orangeAccent;
-    } else {
-      statusColor = Colors.redAccent;
-      statusText = "OFF"; // Paksa teks jadi OFF jika status selain active/lowbat
-    }
+                          if (homeC.iotStatus.value == "Active Now") {
+                            statusColor = AppColors.mint;
+                          } else if (homeC.iotStatus.value == "Lowbat") {
+                            statusColor = Colors.orangeAccent;
+                          } else {
+                            statusColor = Colors.redAccent;
+                            statusText =
+                                "OFF"; // Paksa teks jadi OFF jika status selain active/lowbat
+                          }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 6,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.neutralDark.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.neutralDark),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: statusColor,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            "STATUS: $statusText",
-            style: TextStyle(
-              color: statusColor,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }),
-),
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.neutralDark.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.neutralDark),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: statusColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "STATUS: $statusText",
+                                  style: TextStyle(
+                                    color: statusColor,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ),
                     ],
                   ),
                 ),
@@ -375,7 +371,7 @@ Align(
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Judul
               const Text(
                 "Hapus Data?",
@@ -386,19 +382,15 @@ Align(
                 ),
               ),
               const SizedBox(height: 12),
-              
+
               // Deskripsi
               const Text(
                 "Tindakan ini tidak dapat dibatalkan. Semua data tunanetra yang tersimpan akan dihapus secara permanen.",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                  height: 1.5,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.5),
               ),
               const SizedBox(height: 32),
-              
+
               // Tombol Aksi
               Row(
                 children: [
@@ -423,35 +415,35 @@ Align(
                     ),
                   ),
                   const SizedBox(width: 12),
-                  
+
                   // Tombol Hapus
                   Expanded(
-  child: ElevatedButton(
-    onPressed: () async {
-      // 1. Hapus data dari Firestore
-      await FirebaseFirestore.instance
-          .collection("tunanetra_data")
-          .doc(uid)
-          .delete();
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        // 1. Hapus data dari Firestore
+                        await FirebaseFirestore.instance
+                            .collection("tunanetra_data")
+                            .doc(uid)
+                            .delete();
 
-      // 2. Reset data di HomeController agar tampilan Home langsung berubah
-      if (Get.isRegistered<HomeController>()) {
-        Get.find<HomeController>().resetIoTData();
-      }
+                        // 2. Reset data di HomeController agar tampilan Home langsung berubah
+                        if (Get.isRegistered<HomeController>()) {
+                          Get.find<HomeController>().resetIoTData();
+                        }
 
-      // 3. Kembali ke halaman sebelumnya
-      Get.back();
+                        // 3. Kembali ke halaman sebelumnya
+                        Get.back();
 
-      // 4. Beri notifikasi
-      Get.snackbar(
-        "Berhasil",
-        "Data telah dihapus",
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.black87,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(20),
-      );
-    },
+                        // 4. Beri notifikasi
+                        Get.snackbar(
+                          "Berhasil",
+                          "Data telah dihapus",
+                          snackPosition: SnackPosition.TOP,
+                          backgroundColor: Colors.black87,
+                          colorText: Colors.white,
+                          margin: const EdgeInsets.all(20),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.redAccent,
                         foregroundColor: Colors.white,

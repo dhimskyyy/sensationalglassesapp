@@ -1,9 +1,5 @@
-import 'dart:convert';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,11 +14,6 @@ class AuthController extends GetxController {
   // ================== INSTANCE ==================
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  // ================== EMAIL JS ==================
-  final String serviceId = 'service_v9e4i6c';
-  final String templateId = 'template_nlmf1wn';
-  final String publicKey = '4naTiGhbhMWZAnEYr';
 
   // ================== CONTROLLER ==================
   final emailController = TextEditingController();
@@ -62,39 +53,6 @@ class AuthController extends GetxController {
     phoneController.clear();
   }
 
-  // ================== EMAIL OTP ==================
-  Future<bool> sendEmailOTP(
-    String name,
-    String emailTujuan,
-    String otp,
-  ) async {
-    final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          'origin': 'http://localhost',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode({
-          'service_id': serviceId,
-          'template_id': templateId,
-          'user_id': publicKey,
-          'template_params': {
-            'to_name': name,
-            'to_email': emailTujuan,
-            'otp_code': otp,
-          },
-        }),
-      );
-
-      return response.statusCode == 200;
-    } catch (_) {
-      return false;
-    }
-  }
-
   // ================== VERIFICATION ROUTING ==================
   Future<void> _checkVerificationAndRoute(User user) async {
     try {
@@ -119,14 +77,30 @@ class AuthController extends GetxController {
   }
 
   // ================== RELOAD USER & CEK VERIFIKASI EMAIL ==================
-
   Future<void> resendVerificationEmail() async {
     try {
       await _auth.currentUser?.sendEmailVerification();
-
-      Get.snackbar("Sukses", "Link verifikasi baru telah dikirim.");
+      _showSuccess("Terkirim", "Link verifikasi baru telah dikirim ke email Anda.");
     } catch (e) {
-      Get.snackbar("Error", "Gagal mengirim ulang: $e");
+      _showError("Gagal mengirim ulang link verifikasi.");
+    }
+  }
+
+  Future<void> reloadUserAndCheckVerification() async {
+    try {
+      await _auth.currentUser?.reload();
+      final user = _auth.currentUser;
+
+      if (user != null && user.emailVerified) {
+        await _firestore.collection('users').doc(user.uid).update({
+          "is_verified": true,
+        });
+        Get.offAllNamed(Routes.MAIN);
+      } else {
+        _showError("Email Anda belum diverifikasi.");
+      }
+    } catch (e) {
+      _showError("Gagal memperbarui status verifikasi.");
     }
   }
 
@@ -157,7 +131,7 @@ class AuthController extends GetxController {
 
       _showError(message);
     } catch (_) {
-      _showError("Terjadi kesalahan");
+      _showError("Terjadi kesalahan sistem.");
     }
   }
 
@@ -186,7 +160,6 @@ class AuthController extends GetxController {
         "uid": user.uid,
         "firstName": firstName,
         "lastName": lastName,
-        // PERBAIKAN UTAMA: Ambil email murni dari Google, bukan Firebase
         "email": googleUser.email, 
         "photoUrl": user.photoURL ?? "",
         "is_verified": true,
@@ -194,7 +167,7 @@ class AuthController extends GetxController {
 
       Get.offAllNamed(Routes.MAIN);
     } catch (e) {
-      _showError("Login Google gagal: $e");
+      _showError("Login Google dibatalkan atau gagal.");
     }
   }
 
@@ -217,7 +190,6 @@ class AuthController extends GetxController {
       final firstName = names.isNotEmpty ? names.first : "User";
       final lastName = names.length > 1 ? names.sublist(1).join(' ') : "";
 
-      // PERBAIKAN UTAMA: Ambil email murni dari Provider Data
       String fbEmail = user.email ?? "";
       if (fbEmail.isEmpty && user.providerData.isNotEmpty) {
         fbEmail = user.providerData.first.email ?? "";
@@ -227,89 +199,22 @@ class AuthController extends GetxController {
         "uid": user.uid,
         "firstName": firstName,
         "lastName": lastName,
-        "email": fbEmail, // Pakai email yang sudah diekstrak
+        "email": fbEmail, 
         "photoUrl": user.photoURL ?? "",
         "is_verified": true,
       }, SetOptions(merge: true));
 
       Get.offAllNamed(Routes.MAIN);
     } catch (e) {
-      _showError("Login Facebook gagal: $e");
+      _showError("Login Facebook dibatalkan atau gagal.");
     }
   }
 
-  // ================== OTP ==================
-  // Di AuthController.dart
-
-  String generateOTP() {
-  final rng = Random();
-  return (100000 + rng.nextInt(900000)).toString(); // Menghasilkan 6 digit
-}
-Future<bool> sendWhatsAppOTP(String phoneNumber, String otp) async {
-  // Pastikan nomor diawali dengan kode negara (misal 62)
-  String formattedPhone = phoneNumber;
-  if (formattedPhone.startsWith('0')) {
-    formattedPhone = '62${formattedPhone.substring(1)}';
-  }
-
-  final url = Uri.parse('https://api.fonnte.com/send');
-
-  try {
-    final response = await http.post(
-      url,
-      headers: {
-        // Ganti dengan API Token dari Dashboard Fonnte Anda
-        'Authorization': 'RjUzjWzqhEkFQaQwp6zJ',
-      },
-      body: {
-        'target': formattedPhone,
-        'message': 'KODE OTP ANDA: $otp. Jangan berikan kode ini kepada siapapun demi keamanan akun Anda.',
-        'countryCode': '62',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      print("OTP Berhasil Terkirim: ${response.body}");
-      return true;
-    } else {
-      print("Gagal Kirim OTP: ${response.body}");
-      return false;
-    }
-  } catch (e) {
-    print("Error HTTP: $e");
-    return false;
-  }
-}
-
-  Future<void> verifyOtp(String inputOtp) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) throw "User tidak ditemukan";
-
-      final doc =
-          await _firestore.collection('users').doc(user.uid).get();
-      final serverOtp = doc.get('otp_code') ?? "";
-
-      if (inputOtp != serverOtp) {
-        throw "Kode OTP yang Anda masukkan salah";
-      }
-
-      await _firestore.collection('users').doc(user.uid).update({
-        "is_verified": true,
-        "otp_code": FieldValue.delete(),
-      });
-
-      Get.offAllNamed(Routes.MAIN);
-    } catch (e) {
-      throw e.toString().replaceAll("Exception: ", "");
-    }
-  }
-
-  // ================== RESET & VERIFIKASI ==================
+  // ================== LUPA PASSWORD ==================
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      Get.snackbar("Sukses", "Email reset password telah dikirim");
+      _showSuccess("Terkirim", "Link reset password telah dikirim ke $email");
     } on FirebaseAuthException catch (e) {
       String message = "Gagal mengirim email reset";
 
@@ -320,57 +225,67 @@ Future<bool> sendWhatsAppOTP(String phoneNumber, String otp) async {
     }
   }
 
-  Future<void> reloadUserAndCheckVerification() async {
-    try {
-      await _auth.currentUser?.reload();
-      final user = _auth.currentUser;
-
-      if (user != null && user.emailVerified) {
-        await _firestore.collection('users').doc(user.uid).update({
-          "is_verified": true,
-        });
-        Get.offAllNamed(Routes.MAIN);
-      } else {
-        Get.snackbar(
-          "Info",
-          "Email belum diverifikasi",
-          backgroundColor: AppColors.error,
-          colorText: Colors.white,
-        );
-      }
-    } catch (e) {
-      Get.snackbar("Error", "Gagal memperbarui status: $e");
-    }
-  }
-
   // ================== LOGOUT ==================
   Future<void> signOut() async {
-  try {
-    if (Get.isRegistered<HomeController>()) {
-      Get.find<HomeController>().stopMonitoring();
-      Get.delete<HomeController>(force: true);
+    try {
+      if (Get.isRegistered<HomeController>()) {
+        Get.find<HomeController>().stopMonitoring();
+        Get.delete<HomeController>(force: true);
+      }
+
+      await GoogleSignIn().signOut();
+      await FacebookAuth.instance.logOut();
+      await _auth.signOut();
+
+      clearFields();
+      Get.offAllNamed(Routes.LOGIN); 
+      
+    } catch (e) {
+      _showError("Gagal logout: $e");
     }
-
-    await GoogleSignIn().signOut();
-    await FacebookAuth.instance.logOut();
-    await _auth.signOut();
-
-    clearFields();
-    Get.offAllNamed(Routes.LOGIN); 
-    
-  } catch (e) {
-    _showError("Gagal logout: $e");
   }
-}
 
-  // ================== ERROR UI ==================
+  // ================== CUSTOM BEAUTIFUL SNACKBARS ==================
+  
+  void _showSuccess(String title, String message) {
+    Get.snackbar(
+      title,
+      message,
+      backgroundColor: AppColors.mint,
+      colorText: Colors.white,
+      icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 28),
+      snackPosition: SnackPosition.TOP,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      borderRadius: 16,
+      duration: const Duration(seconds: 4),
+      boxShadows: [
+        BoxShadow(
+          color: AppColors.mint.withOpacity(0.4),
+          blurRadius: 15,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    );
+  }
+
   void _showError(String message) {
     Get.snackbar(
-      "Error",
+      "Pemberitahuan",
       message,
-      backgroundColor: Colors.red,
+      backgroundColor: const Color(0xFFFF5C5C), // Warna merah lembut tapi tegas
       colorText: Colors.white,
+      icon: const Icon(Icons.error_outline, color: Colors.white, size: 28),
       snackPosition: SnackPosition.TOP,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      borderRadius: 16,
+      duration: const Duration(seconds: 4),
+      boxShadows: [
+        BoxShadow(
+          color: const Color(0xFFFF5C5C).withOpacity(0.4),
+          blurRadius: 15,
+          offset: const Offset(0, 8),
+        ),
+      ],
     );
   }
 }
