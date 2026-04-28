@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:sensationalglassesapp/app/theme/app_text_styles.dart';
 import 'dart:io';
 import '../controllers/home_controller.dart';
 import '../controllers/auth_controller.dart';
@@ -140,7 +139,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         colorText: Colors.white,
       );
     } catch (e) {
-      Get.snackbar("Error", e.toString(), backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar("Error", e.toString(), backgroundColor: AppColors.error, colorText: Colors.white);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -176,20 +175,28 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GestureDetector(
+    onTap: () => FocusScope.of(context).unfocus(),
+    child: Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Edit Profile", style: AppTextStyles.appBarTitle),
-        centerTitle: true,
-        elevation: 0,
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Get.back(),
+        ),
+        title: const Text(
+          'Edit Profil',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             Center(
               child: Stack(
                 children: [
@@ -243,11 +250,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
               Icons.calendar_today_outlined, 
               onTap: _pickDate, 
               isReadOnly: true,
-              overrideFillColor: Colors.white, // INI YANG BIKIN JADI PUTIH
+              overrideFillColor: Colors.white,
             ),
 
-            const SizedBox(height: 40),
-
+            const SizedBox(height: 10),
+          
             SizedBox(
               width: double.infinity,
               height: 56,
@@ -263,10 +270,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     : const Text("Simpan Perubahan", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
-            const SizedBox(height: 40),
           ],
         ),
       ),
+    ),
     );
   }
 

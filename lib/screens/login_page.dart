@@ -57,7 +57,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 10),
                         const Text(
                           'Masuk ke Akun\nAnda',
                           style: TextStyle(
@@ -67,7 +67,7 @@ class _LoginPageState extends State<LoginPage> {
                             height: 1.02,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 10),
                         Row(
                           children: [
                             const Text(
@@ -77,9 +77,9 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(width: 8),
                             GestureDetector(
                             onTap: () {
-                              FocusScope.of(context).unfocus(); // Matikan kursor
+                              FocusScope.of(context).unfocus();
                               authC.clearFields();
-                              Get.offNamed(Routes.REGISTER); // Pindah dengan menghancurkan halaman ini
+                              Get.offNamed(Routes.REGISTER);
                             },
                             child: const Text(
                               'Daftar',
@@ -149,8 +149,8 @@ class _LoginPageState extends State<LoginPage> {
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: () {
-                                FocusScope.of(context).unfocus(); // Matikan kursor
-                                Get.toNamed(Routes.FORGOT_PASSWORD); // Lupa password biarkan pakai toNamed saja
+                                FocusScope.of(context).unfocus();
+                                Get.toNamed(Routes.FORGOT_PASSWORD);
                               },
                               style: TextButton.styleFrom(
                                 padding: EdgeInsets.zero,

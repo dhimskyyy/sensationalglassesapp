@@ -22,7 +22,7 @@ class HelpSupportPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -115,7 +115,7 @@ class HelpSupportPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Apabila Anda mengalami kendala teknis, menemukan bug, atau membutuhkan panduan dalam menggunakan aplikasi ini, jangan ragu untuk menghubungi kami. Setiap saran dan masukan Anda sangat berharga untuk menjadikan aplikasi ini lebih baik ke depannya.',
+                    'Apabila anda mengalami kendala teknis, menemukan bug, atau membutuhkan panduan dalam menggunakan aplikasi ini, jangan ragu untuk menghubungi kami. Setiap saran dan masukan anda sangat berharga untuk menjadikan aplikasi ini lebih baik ke depannya.',
                     style: TextStyle(fontSize: 13, color: Colors.black87, height: 1.6),
                   ),
                   const Padding(

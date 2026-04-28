@@ -14,7 +14,6 @@ class EmailVerificationPage extends StatefulWidget {
 
 class _EmailVerificationPageState extends State<EmailVerificationPage> {
   bool _isLoading = false;
-  // Mengambil argumen email yang dikirim dari halaman register
   final String emailUser = Get.arguments ?? "Email Anda";
 
   @override
@@ -106,11 +105,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                         ),
                         const SizedBox(height: 24),
                         
-                        // TOMBOL KIRIM ULANG (GestureDetector agar mirip style kamu)
                         Center(
                           child: GestureDetector(
                             onTap: () {
-                              // Panggil fungsi kirim ulang verifikasi di controller
                               Get.find<AuthController>().resendVerificationEmail();
                             },
                             child: const Text(
@@ -134,7 +131,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                                 ? null
                                 : () async {
                                     setState(() => _isLoading = true);
-                                    // Fungsi reloadUserAndCheckVerification sudah kita bahas di AuthController
                                     await Get.find<AuthController>().reloadUserAndCheckVerification();
                                     setState(() => _isLoading = false);
                                   },

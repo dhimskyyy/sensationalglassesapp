@@ -28,7 +28,7 @@ class ProfileScreen extends StatelessWidget {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               Center(
                 child: Column(
                   children: [
@@ -138,6 +138,12 @@ class ProfileScreen extends StatelessWidget {
                   icon: Icons.person_outline,
                   title: 'Edit Profile',
                   onTap: () => Get.to(() => const UserProfilePage()),
+                ),
+                _buildSettingTile(
+                  primaryColor: Colors.blueAccent, // Warna beda agar terlihat
+                  icon: Icons.bug_report,
+                  title: 'Test Notifikasi (Paksa)',
+                  onTap: () => homeC.testSimpanNotif(),
                 ),
                 _buildSettingTile(
                   primaryColor: AppColors.mint,

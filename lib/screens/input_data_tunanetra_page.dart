@@ -6,8 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
-import 'dart:convert';
-import 'package:mobile_scanner/mobile_scanner.dart';
+
+import 'package:sensationalglassesapp/app/theme/app_colors.dart';
 
 class InputDataTunanetraPage extends StatefulWidget {
   const InputDataTunanetraPage({super.key});
@@ -21,206 +21,125 @@ class _InputDataTunanetraPageState extends State<InputDataTunanetraPage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController ageController = TextEditingController();
   final TextEditingController bloodTypeController = TextEditingController();
-  final TextEditingController birthPlaceDateController = TextEditingController();
+  final TextEditingController birthPlaceDateController =
+      TextEditingController();
 
   // Controller IOT Tetap
-  final TextEditingController thingSpeakChannelController = TextEditingController();
-  final TextEditingController thingSpeakReadKeyController = TextEditingController();
+  final TextEditingController thingSpeakChannelController =
+      TextEditingController();
+  final TextEditingController thingSpeakReadKeyController =
+      TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
   bool _isObscureChannel = true;
   bool _isObscureKey = true;
-  
+
   File? _selectedImage;
   String? _existingFotoUrl;
 
   String _generateIdNumber(String name, String birthDate) {
-  // 1. Ambil Inisial Nama (Contoh: Budi Setiawan -> BS)
-  List<String> nameParts = name.trim().split(' ');
-  String initials = "";
-  if (nameParts.length >= 2) {
-    initials = (nameParts[0][0] + nameParts[1][0]).toUpperCase();
-  } else if (nameParts.isNotEmpty) {
-    initials = nameParts[0][0].toUpperCase();
+    List<String> nameParts = name.trim().split(' ');
+    String initials = "";
+    if (nameParts.length >= 2) {
+      initials = (nameParts[0][0] + nameParts[1][0]).toUpperCase();
+    } else if (nameParts.isNotEmpty) {
+      initials = nameParts[0][0].toUpperCase();
+    }
+
+    // 2. Ambil Angka dari Tanggal Lahir (Contoh: 14 Agustus 1995 -> 14081995)
+    // Kita asumsikan format input user mengandung angka tanggal-bulan-tahun
+    String dateNumbers = birthDate.replaceAll(RegExp(r'[^0-9]'), '');
+
+    // Jika pembersihan angka gagal/kosong, gunakan default
+    if (dateNumbers.isEmpty) dateNumbers = "00000000";
+
+    // 3. Tambahkan nomor urut/acak (Contoh: 001)
+    String randomSuffix = "001";
+
+    return "$dateNumbers-$initials-$randomSuffix";
   }
-
-  // 2. Ambil Angka dari Tanggal Lahir (Contoh: 14 Agustus 1995 -> 14081995)
-  // Kita asumsikan format input user mengandung angka tanggal-bulan-tahun
-  String dateNumbers = birthDate.replaceAll(RegExp(r'[^0-9]'), '');
-  
-  // Jika pembersihan angka gagal/kosong, gunakan default
-  if (dateNumbers.isEmpty) dateNumbers = "00000000";
-
-  // 3. Tambahkan nomor urut/acak (Contoh: 001)
-  String randomSuffix = "001"; 
-
-  return "$dateNumbers-$initials-$randomSuffix";
-}
 
   Future<void> _pickImage(ImageSource source) async {
-  final pickedFile = await ImagePicker().pickImage(source: source, imageQuality: 50);
-  if (pickedFile != null) {
-    setState(() {
-      _selectedImage = File(pickedFile.path);
-    });
-  }
-  Get.back();
-}
-
-void _showPicker(context) {
-  showModalBottomSheet(
-    context: context,
-    builder: (BuildContext bc) {
-      return SafeArea(
-        child: Wrap(
-          children: <Widget>[
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Galeri'),
-              onTap: () => _pickImage(ImageSource.gallery),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_camera),
-              title: const Text('Kamera'),
-              onTap: () => _pickImage(ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Hapus Foto', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                setState(() {
-                  _selectedImage = null;
-                  _existingFotoUrl = null;
-                });
-                Get.back();
-              },
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
-  void _prosesDataDariQR(String rawCode) {
-  try {
-    Map<String, dynamic> data = jsonDecode(rawCode);
-
-    // Validasi apakah key 'id' dan 'key' ada di dalam JSON
-    if (data.containsKey('id') && data.containsKey('key')) {
+    final pickedFile = await ImagePicker().pickImage(
+      source: source,
+      imageQuality: 50,
+    );
+    if (pickedFile != null) {
       setState(() {
-        thingSpeakChannelController.text = data['id'].toString();
-        thingSpeakReadKeyController.text = data['key'].toString();
+        _selectedImage = File(pickedFile.path);
       });
-
-      Get.snackbar(
-        "Alat Terdeteksi",
-        "Konfigurasi alat berhasil dimuat.",
-        backgroundColor: const Color(0xFF66C7AA),
-        colorText: Colors.white,
-      );
-    } else {
-      throw Exception("Data tidak lengkap");
     }
-  } catch (e) {
-    Get.snackbar(
-      "Format Salah",
-      "Gunakan QR Code khusus alat IoT (Key 'id' & 'key' tidak ditemukan).",
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
+    Get.back();
+  }
+
+  void _showPicker(context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext bc) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galeri'),
+                onTap: () => _pickImage(ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Kamera'),
+                onTap: () => _pickImage(ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text(
+                  'Hapus Foto',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  setState(() {
+                    _selectedImage = null;
+                    _existingFotoUrl = null;
+                  });
+                  Get.back();
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
-}
 
-void _bukaScannerKamera() {
-  // Inisialisasi controller secara spesifik
-  final MobileScannerController scannerController = MobileScannerController(
-    detectionSpeed: DetectionSpeed.normal,
-    facing: CameraFacing.back,
-    formats: [BarcodeFormat.qrCode], // FOKUS: Hanya scan QR Code
-    detectionTimeoutMs: 1000, // Beri jeda 1 detik antar deteksi agar tidak lag
-  );
+  @override
+  void initState() {
+    super.initState();
 
-  Get.to(() => Scaffold(
-    appBar: AppBar(
-      title: const Text("Posisikan QR di Dalam Kotak"),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () {
-          scannerController.dispose(); // Pastikan dispose saat keluar
-          Get.back();
-        },
-      ),
-    ),
-    body: Stack(
-      children: [
-        MobileScanner(
-          controller: scannerController,
-          onDetect: (capture) {
-            final List<Barcode> barcodes = capture.barcodes;
-            if (barcodes.isNotEmpty) {
-              final String? code = barcodes.first.displayValue ?? barcodes.first.rawValue;
-              
-              if (code != null) {
-                // Matikan scanner segera setelah terdeteksi agar tidak looping
-                scannerController.stop(); 
-                _prosesDataDariQR(code);
-                
-                // Beri sedikit delay sebelum pindah halaman agar snackbar muncul
-                Future.delayed(const Duration(milliseconds: 500), () {
-                  scannerController.dispose();
-                  Get.back();
-                });
-              }
-            }
-          },
-        ),
-        // OVERLAY KOTAK
-        Center(
-          child: Container(
-            width: 250,
-            height: 250,
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFF66C7AA), width: 4),
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-        ),
-      ],
-    ),
-  ));
-}
-
-@override
-void initState() {
-  super.initState();
-  
-  // Menjalankan fungsi pengisian data setelah frame pertama dirender
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    _fillDataIfAvailable();
-  });
-}
-
-void _fillDataIfAvailable() {
-  // Mengambil arguments yang dikirim dari halaman ID Card
-  var data = Get.arguments;
-
-  if (data != null && data is Map<String, dynamic>) {
-    setState(() {
-      nameController.text = data['nama_tunanetra'] ?? "";
-      ageController.text = data['usia'] ?? "";
-      bloodTypeController.text = data['golongan_darah'] ?? "";
-      birthPlaceDateController.text = data['tempat_tanggal_lahir'] ?? "";
-      
-      // Mengisi data IoT jika tersedia
-      thingSpeakChannelController.text = data['thingspeak_channel_id'] ?? "";
-      thingSpeakReadKeyController.text = data['thingspeak_read_key'] ?? "";
-
-      _existingFotoUrl = data['foto_url'];
+    // Menjalankan fungsi pengisian data setelah frame pertama dirender
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fillDataIfAvailable();
     });
   }
-}
+
+  void _fillDataIfAvailable() {
+    // Mengambil arguments yang dikirim dari halaman ID Card
+    var data = Get.arguments;
+
+    if (data != null && data is Map<String, dynamic>) {
+      setState(() {
+        nameController.text = data['nama_tunanetra'] ?? "";
+        ageController.text = data['usia'] ?? "";
+        bloodTypeController.text = data['golongan_darah'] ?? "";
+        birthPlaceDateController.text = data['tempat_tanggal_lahir'] ?? "";
+
+        // Mengisi data IoT jika tersedia
+        thingSpeakChannelController.text = data['thingspeak_channel_id'] ?? "";
+        thingSpeakReadKeyController.text = data['thingspeak_read_key'] ?? "";
+
+        _existingFotoUrl = data['foto_url'];
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -271,30 +190,38 @@ void _fillDataIfAvailable() {
                       ),
                       padding: const EdgeInsets.all(4),
                       child: // Ganti widget CircleAvatar di dalam stack Header Profil
-CircleAvatar(
-  radius: 60,
-  backgroundColor: Colors.grey[200],
-  child: ClipOval(
-    child: _selectedImage != null
-        ? Image.file(_selectedImage!, fit: BoxFit.cover, width: 120, height: 120)
-        : (_existingFotoUrl != null && _existingFotoUrl!.isNotEmpty)
-            ? CachedNetworkImage(
-                imageUrl: _existingFotoUrl!,
-                fit: BoxFit.cover,
-                width: 120,
-                height: 120,
-                // Placeholder transparan agar tidak ada "kedipan" putih/default
-                placeholder: (context, url) => Container(color: Colors.transparent),
-                errorWidget: (context, url, error) => const Icon(Icons.error),
-              )
-            : Image.asset(
-                'assets/default_profile.png', 
-                fit: BoxFit.cover, 
-                width: 120, 
-                height: 120
-              ),
-  ),
-),
+                      CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.grey[200],
+                        child: ClipOval(
+                          child: _selectedImage != null
+                              ? Image.file(
+                                  _selectedImage!,
+                                  fit: BoxFit.cover,
+                                  width: 120,
+                                  height: 120,
+                                )
+                              : (_existingFotoUrl != null &&
+                                    _existingFotoUrl!.isNotEmpty)
+                              ? CachedNetworkImage(
+                                  imageUrl: _existingFotoUrl!,
+                                  fit: BoxFit.cover,
+                                  width: 120,
+                                  height: 120,
+                                  // Placeholder transparan agar tidak ada "kedipan" putih/default
+                                  placeholder: (context, url) =>
+                                      Container(color: Colors.transparent),
+                                  errorWidget: (context, url, error) =>
+                                      const Icon(Icons.error),
+                                )
+                              : Image.asset(
+                                  'assets/default_profile.png',
+                                  fit: BoxFit.cover,
+                                  width: 120,
+                                  height: 120,
+                                ),
+                        ),
+                      ),
                     ),
                     GestureDetector(
                       onTap: () => _showPicker(context),
@@ -336,7 +263,6 @@ CircleAvatar(
                   controller: nameController,
                   label: "Nama Lengkap",
                   icon: Icons.person_outline,
-                  hint: "Contoh: Budi Setiawan",
                 ),
                 const SizedBox(height: 20),
 
@@ -349,7 +275,6 @@ CircleAvatar(
                         controller: ageController,
                         label: "Usia",
                         icon: Icons.cake_outlined,
-                        hint: "28",
                         keyboardType: TextInputType.number,
                       ),
                     ),
@@ -359,7 +284,6 @@ CircleAvatar(
                         controller: bloodTypeController,
                         label: "Golongan Darah",
                         icon: Icons.water_drop_outlined,
-                        hint: "O",
                         autoUpperCase: true,
                       ),
                     ),
@@ -372,36 +296,32 @@ CircleAvatar(
                   controller: birthPlaceDateController,
                   label: "Tempat, Tanggal Lahir",
                   icon: Icons.location_on_outlined,
-                  hint: "Bandung, 14 Agustus 1995",
                 ),
                 const SizedBox(height: 32),
 
-                // Bagian Konfigurasi IOT
-                Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-    const Text(
-      "Konfigurasi Alat",
-      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+const Align(
+  alignment: Alignment.centerLeft,
+  child: Text(
+    "Konfigurasi Alat",
+    style: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.bold,
+      color: Colors.blueGrey,
     ),
-    TextButton.icon(
-      onPressed: () => _bukaScannerKamera(),
-      icon: const Icon(Icons.qr_code_scanner, color: Color(0xFF66C7AA)),
-      label: const Text("Scan QR", style: TextStyle(color: Color(0xFF66C7AA))),
-    ),
-  ],
+  ),
 ),
                 const SizedBox(height: 16),
                 _buildModernTextField(
                   controller: thingSpeakChannelController,
                   label: "ThingSpeak Channel ID",
                   icon: Icons.router_outlined,
-                  hint: "Contoh: 3239717",
                   keyboardType: TextInputType.number,
                   obscureText: _isObscureChannel, // Gunakan variabel state
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _isObscureChannel ? Icons.visibility_off : Icons.visibility,
+                      _isObscureChannel
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                       color: Colors.grey,
                     ),
                     onPressed: () {
@@ -416,7 +336,6 @@ CircleAvatar(
                   controller: thingSpeakReadKeyController,
                   label: "Read API Key",
                   icon: Icons.vpn_key_outlined,
-                  hint: "Masukkan API Key",
                   obscureText: _isObscureKey, // Gunakan variabel state
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -445,7 +364,7 @@ CircleAvatar(
                         Get.snackbar(
                           "Data Belum Lengkap",
                           "Silakan isi semua kolom yang tersedia sebelum melanjutkan.",
-                          backgroundColor: Colors.orangeAccent,
+                          backgroundColor: AppColors.error,
                           colorText: Colors.white,
                           icon: const Icon(
                             Icons.warning_amber_rounded,
@@ -498,7 +417,6 @@ CircleAvatar(
     required TextEditingController controller,
     required String label,
     required IconData icon,
-    required String hint,
     TextInputType keyboardType = TextInputType.text,
     bool autoUpperCase = false,
     bool obscureText = false, // <-- TAMBAHKAN PARAMETER INI
@@ -518,7 +436,7 @@ CircleAvatar(
         const SizedBox(height: 10),
         TextFormField(
           controller: controller,
-          obscureText: obscureText, // <-- TERAPKAN DI SINI
+          obscureText: obscureText,
           keyboardType: keyboardType,
           textAlignVertical: TextAlignVertical.center,
           style: const TextStyle(fontSize: 15),
@@ -531,8 +449,6 @@ CircleAvatar(
             }
           },
           decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(color: Colors.grey[400]),
             prefixIcon: Icon(icon, color: const Color(0xFF66C7AA), size: 22),
             suffixIcon: suffixIcon,
             filled: true,
@@ -567,27 +483,32 @@ CircleAvatar(
   // LOGIKA SIMPAN (Disesuaikan dengan Field Baru)
   Future<void> _saveData() async {
     try {
-      String uid = FirebaseAuth.instance.currentUser!.uid;      
+      String uid = FirebaseAuth.instance.currentUser!.uid;
       String? finalFotoUrl = _existingFotoUrl;
 
       if (_selectedImage != null) {
-      Reference ref = FirebaseStorage.instance.ref().child("profile_tunanetra/$uid.jpg");
-      UploadTask uploadTask = ref.putFile(_selectedImage!);
-      TaskSnapshot snapshot = await uploadTask;
-      finalFotoUrl = await snapshot.ref.getDownloadURL();
-    }
+        Reference ref = FirebaseStorage.instance.ref().child(
+          "profile_tunanetra/$uid.jpg",
+        );
+        UploadTask uploadTask = ref.putFile(_selectedImage!);
+        TaskSnapshot snapshot = await uploadTask;
+        finalFotoUrl = await snapshot.ref.getDownloadURL();
+      }
 
       // Cek apakah ini data baru atau edit
-    var existingData = Get.arguments;
-    String idNumber;
+      var existingData = Get.arguments;
+      String idNumber;
 
-    if (existingData != null && existingData['id_number'] != null) {
-      // Jika edit, gunakan ID yang sudah ada
-      idNumber = existingData['id_number'];
-    } else {
-      // Jika data baru, buat ID otomatis
-      idNumber = _generateIdNumber(nameController.text, birthPlaceDateController.text);
-    }
+      if (existingData != null && existingData['id_number'] != null) {
+        // Jika edit, gunakan ID yang sudah ada
+        idNumber = existingData['id_number'];
+      } else {
+        // Jika data baru, buat ID otomatis
+        idNumber = _generateIdNumber(
+          nameController.text,
+          birthPlaceDateController.text,
+        );
+      }
 
       await FirebaseFirestore.instance
           .collection("tunanetra_data")
@@ -614,12 +535,14 @@ CircleAvatar(
       );
 
       Future.delayed(const Duration(seconds: 2), () {
-  if (Navigator.canPop(context)) {
-    Navigator.pop(context); // Kembali ke Home Screen tanpa menghapus state
-  } else {
-    Get.offAllNamed('/main'); // Fallback jika stack hilang
-  }
-});
+        if (Navigator.canPop(context)) {
+          Navigator.pop(
+            context,
+          ); // Kembali ke Home Screen tanpa menghapus state
+        } else {
+          Get.offAllNamed('/main'); // Fallback jika stack hilang
+        }
+      });
     } catch (e) {
       Get.snackbar(
         "Error",

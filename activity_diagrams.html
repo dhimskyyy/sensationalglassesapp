@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Activity Diagram - Sensational Glasses App</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 30px; }
+  .diagram-wrapper {
+    background: #fff; max-width: 960px; margin: 0 auto 40px; padding: 30px;
+    border: 1px solid #ccc; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  h2 { text-align: center; margin-bottom: 20px; font-size: 18px; }
+  canvas { display: block; margin: 0 auto; }
+  @media print { body { background:#fff; padding:0; } .diagram-wrapper { box-shadow:none; border:none; page-break-after:always; } }
+</style>
+</head>
+<body>
+
+<div class="diagram-wrapper">
+  <h2>Activity Diagram &mdash; Autentikasi</h2>
+  <canvas id="c1" width="620" height="540"></canvas>
+</div>
+
+<div class="diagram-wrapper">
+  <h2>Activity Diagram &mdash; Monitoring</h2>
+  <canvas id="c2" width="930" height="620"></canvas>
+</div>
+
+<div class="diagram-wrapper">
+  <h2>Activity Diagram &mdash; Kontrol Alarm</h2>
+  <canvas id="c3" width="930" height="720"></canvas>
+</div>
+
+<script>
+// ====== HELPER DRAWING FUNCTIONS ======
+function drawInitial(c,x,y){ c.beginPath(); c.arc(x,y,11,0,Math.PI*2); c.fillStyle='#000'; c.fill(); }
+
+function drawFinal(c,x,y){ 
+  c.beginPath(); c.arc(x,y,14,0,Math.PI*2); c.strokeStyle='#000'; c.lineWidth=2.5; c.stroke(); 
+  c.beginPath(); c.arc(x,y,8,0,Math.PI*2); c.fillStyle='#000'; c.fill(); 
+}
+
+function drawAct(c,x,y,txt,w,h){
+  w=w||170; h=h||44; var r=10, rx=x-w/2, ry=y-h/2;
+  c.beginPath(); c.moveTo(rx+r,ry);
+  c.lineTo(rx+w-r,ry); c.arcTo(rx+w,ry,rx+w,ry+r,r);
+  c.lineTo(rx+w,ry+h-r); c.arcTo(rx+w,ry+h,rx+w-r,ry+h,r);
+  c.lineTo(rx+r,ry+h); c.arcTo(rx,ry+h,rx,ry+h-r,r);
+  c.lineTo(rx,ry+r); c.arcTo(rx,ry,rx+r,ry,r); c.closePath();
+  c.fillStyle='#fff'; c.fill(); c.strokeStyle='#000'; c.lineWidth=1.5; c.stroke();
+  c.fillStyle='#000'; c.font='12px Arial'; c.textAlign='center'; c.textBaseline='middle';
+  var lines=txt.split('\n'), lh=15, sy=y-((lines.length-1)*lh)/2;
+  lines.forEach(function(l,i){ c.fillText(l,x,sy+i*lh); });
+}
+
+function drawDec(c,x,y,txt,s){
+  s=s||32; c.beginPath(); c.moveTo(x,y-s); c.lineTo(x+s*1.3,y); c.lineTo(x,y+s); c.lineTo(x-s*1.3,y); c.closePath();
+  c.fillStyle='#fff'; c.fill(); c.strokeStyle='#000'; c.lineWidth=1.5; c.stroke();
+  c.fillStyle='#000'; c.font='12px Arial'; c.textAlign='center'; c.textBaseline='middle';
+  var lines=txt.split('\n'), lh=14, sy=y-((lines.length-1)*lh)/2;
+  lines.forEach(function(l,i){ c.fillText(l,x,sy+i*lh); });
+}
+
+function drawArr(c,pts,lbl,lo){
+  c.beginPath(); c.moveTo(pts[0][0],pts[0][1]);
+  for(var i=1;i<pts.length;i++) c.lineTo(pts[i][0],pts[i][1]);
+  c.strokeStyle='#000'; c.lineWidth=1.5; c.stroke();
+  var p=pts[pts.length-1], q=pts[pts.length-2];
+  var a=Math.atan2(p[1]-q[1],p[0]-q[0]), hl=9;
+  c.beginPath(); c.moveTo(p[0],p[1]);
+  c.lineTo(p[0]-hl*Math.cos(a-Math.PI/6),p[1]-hl*Math.sin(a-Math.PI/6));
+  c.lineTo(p[0]-hl*Math.cos(a+Math.PI/6),p[1]-hl*Math.sin(a+Math.PI/6));
+  c.closePath(); c.fillStyle='#000'; c.fill();
+  if(lbl){ lo=lo||[0,0]; c.font='11px Arial'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(lbl,lo[0],lo[1]); }
+}
+
+function drawLanes(c,lanes,W,H){
+  var n=lanes.length, lw=W/n, hh=35;
+  c.strokeStyle='#000'; c.lineWidth=1.5; c.strokeRect(0,0,W,H);
+  c.beginPath(); c.moveTo(0,hh); c.lineTo(W,hh); c.stroke();
+  for(var i=0;i<n;i++){
+    var lx=i*lw;
+    if(i>0){ c.beginPath(); c.moveTo(lx,0); c.lineTo(lx,hh); c.stroke(); c.setLineDash([5,4]); c.beginPath(); c.moveTo(lx,hh); c.lineTo(lx,H); c.stroke(); c.setLineDash([]); }
+    c.fillStyle='#000'; c.font='bold 13px Arial'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(lanes[i],lx+lw/2,hh/2);
+  }
+}
+
+// ====== DIAGRAM 1: AUTENTIKASI ======
+(function(){
+  var cv=document.getElementById('c1'), c=cv.getContext('2d');
+  var W=620, H=540, L0=155, L1=465;
+  drawLanes(c,['Pengguna','Sistem'],W,H);
+
+  // Nodes
+  drawInitial(c,L0,68);
+  drawAct(c,L0,125,'Membuka Aplikasi');
+  drawAct(c,L1,125,'Menampilkan\nHalaman Login');
+  drawAct(c,L0,225,'Memasukkan Email\ndan Password');
+  drawAct(c,L1,225,'Memvalidasi Data');
+  drawDec(c,L1,315,'Valid?');
+  drawAct(c,L1,415,'Menampilkan\nHalaman Utama');
+  drawFinal(c,L1,485);
+
+  // Arrows
+  drawArr(c,[[L0,79],[L0,103]]);                              // init → act1
+  drawArr(c,[[240,125],[380,125]]);                            // act1 → act2
+  drawArr(c,[[L1,147],[L1,170],[L0,170],[L0,203]]);            // act2 → act3
+  drawArr(c,[[240,225],[380,225]]);                            // act3 → act4
+  drawArr(c,[[L1,247],[L1,283]]);                              // act4 → dec
+  drawArr(c,[[L1,347],[L1,393]],'Ya',[480,367]);               // dec[Ya] → act5
+  drawArr(c,[[L1+42,315],[590,315],[590,125],[550,125]],'Tidak',[555,300]); // dec[Tidak] → loop
+  drawArr(c,[[L1,437],[L1,470]]);                              // act5 → final
+})();
+
+// ====== DIAGRAM 2: MONITORING ======
+(function(){
+  var cv=document.getElementById('c2'), c=cv.getContext('2d');
+  var W=930, H=620, L0=155, L1=465, L2=775;
+  drawLanes(c,['Pengguna','Sistem','Perangkat IoT'],W,H);
+
+  // Nodes
+  drawInitial(c,L0,68);
+  drawAct(c,L0,125,'Membuka\nHalaman Utama');
+  drawAct(c,L1,125,'Memulai\nMonitoring');
+  drawAct(c,L2,215,'Mengirim\nData Sensor');
+  drawAct(c,L1,215,'Mengambil\nData Sensor');
+  drawAct(c,L1,310,'Menampilkan Data\nMonitoring');
+  drawDec(c,L1,400,'Melebihi\nBatas?',35);
+  drawAct(c,L1,495,'Mengirim Notifikasi\nPeringatan');
+  drawAct(c,L0,495,'Menerima\nNotifikasi');
+  drawFinal(c,L0,570);
+
+  // Arrows
+  drawArr(c,[[L0,79],[L0,103]]);                               // init → act1
+  drawArr(c,[[240,125],[380,125]]);                             // act1 → act2
+  drawArr(c,[[L1,147],[L1,170],[L2,170],[L2,193]]);             // act2 → act3(IoT)
+  drawArr(c,[[690,215],[550,215]]);                             // act3(IoT) → act4
+  drawArr(c,[[L1,237],[L1,288]]);                               // act4 → act5
+  drawArr(c,[[L1,332],[L1,365]]);                               // act5 → dec
+  drawArr(c,[[L1,435],[L1,473]],'Ya',[485,453]);                // dec[Ya] → notif
+  drawArr(c,[[380,495],[240,495]]);                             // notif → pengguna
+  drawArr(c,[[L0,517],[L0,555]]);                               // pengguna → final
+  // Tidak branch - goes left, down to final
+  drawArr(c,[[L1-46,400],[340,400],[340,570],[L0+15,570]],'Tidak',[345,385]);
+})();
+
+// ====== DIAGRAM 3: KONTROL ALARM ======
+(function(){
+  var cv=document.getElementById('c3'), c=cv.getContext('2d');
+  var W=930, H=720, L0=155, L1=465, L2=775;
+  drawLanes(c,['Pengguna','Sistem','Perangkat IoT'],W,H);
+
+  // Nodes
+  drawInitial(c,L0,68);
+  drawAct(c,L0,130,'Menekan\nTombol Alarm');
+  drawDec(c,L1,130,'Perangkat\nTerhubung?',38);
+
+  drawDec(c,L1,280,'Perangkat\nOnline?',38);
+
+  drawAct(c,L1,400,'Mengirim Perintah\nAlarm ke Server');
+  drawAct(c,L2,400,'Menerima Perintah\ndan Mengaktifkan Alarm');
+  drawAct(c,L1,500,'Menampilkan Status\nAlarm Aktif');
+  drawAct(c,L0,500,'Melihat\nStatus Alarm');
+
+  drawAct(c,L0,330,'Menampilkan\nPesan Error');
+  drawFinal(c,L0,600);
+
+  // Arrows
+  drawArr(c,[[L0,79],[L0,108]]);                                // init → act1
+  drawArr(c,[[240,130],[L1-49,130]]);                           // act1 → dec1
+
+  // dec1[Tidak] → left → Menampilkan Pesan Error
+  drawArr(c,[[L1-49,130],[310,130],[310,200],[L0,200],[L0,308]],'Tidak',[310,115]);
+
+  // dec1[Ya] → down to dec2
+  drawArr(c,[[L1,168],[L1,242]],'Ya',[482,205]);
+
+  // dec2[Tidak] → left → Menampilkan Pesan Error
+  drawArr(c,[[L1-49,280],[310,280],[310,330],[240,330]],'Tidak',[310,265]);
+
+  // dec2[Ya] → send command
+  drawArr(c,[[L1,318],[L1,378]],'Ya',[482,348]);
+
+  // send → IoT receives
+  drawArr(c,[[550,400],[690,400]]);
+
+  // IoT → back to Sistem (status)
+  drawArr(c,[[L2,422],[L2,470],[L1,470],[L1,478]]);
+
+  // status → pengguna
+  drawArr(c,[[380,500],[240,500]]);
+
+  // Pesan Error → final
+  drawArr(c,[[L0,352],[L0,585]]);
+
+  // pengguna → final
+  drawArr(c,[[L0,522],[L0,585]]);
+})();
+</script>
+</body>
+</html>

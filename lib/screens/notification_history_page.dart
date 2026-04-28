@@ -14,7 +14,7 @@ class NotificationHistoryPage extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -44,6 +44,7 @@ class NotificationHistoryPage extends StatelessWidget {
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  print("UID User: ${user.uid}");
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -93,63 +94,116 @@ class NotificationHistoryPage extends StatelessWidget {
                       iconData = Icons.share_location;
                     }
 
-                    return GestureDetector(
-                      onTap: () {
-                        // Jika diklik, tandai sudah dibaca di database dan pergi ke Maps
-                        notifDoc.reference.update({'isRead': true});
-                        Get.to(() => const MapsScreen());
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: (notif['isRead'] == true) ? Colors.white : const Color(0xFFF0FAFC),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: (notif['isRead'] == true) ? Colors.grey.shade100 : AppColors.mint.withOpacity(0.3)),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2)),
-                          ],
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
-                              child: Icon(iconData, color: iconColor, size: 24),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          notif['title'] ?? 'Notifikasi', 
-                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: (notif['isRead'] == true) ? Colors.black87 : AppColors.mint)
-                                        ),
-                                      ),
-                                      if (notif['isRead'] == false)
-                                        Container(
-                                          width: 8, height: 8,
-                                          decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
-                                        )
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(notif['message'] ?? '', style: const TextStyle(color: Colors.black87, fontSize: 13, height: 1.4)),
-                                  const SizedBox(height: 12),
-                                  Text(formattedTime, style: const TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w500)),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
+                    // Di dalam ListView.builder, ubah bagian return menjadi seperti ini:
+
+return Dismissible(
+  // Key WAJIB ada dan harus unik agar Flutter tahu item mana yang digeser
+  key: Key(notifDoc.id), 
+  
+  // Membatasi arah gesekan hanya dari kanan ke kiri (endToStart)
+  direction: DismissDirection.endToStart, 
+  
+  // Tampilan background warna merah saat item digeser
+  background: Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    padding: const EdgeInsets.symmetric(horizontal: 24),
+    decoration: BoxDecoration(
+      color: Colors.redAccent,
+      borderRadius: BorderRadius.circular(16),
+    ),
+    alignment: Alignment.centerRight,
+    child: const Icon(
+      Icons.delete_outline,
+      color: Colors.white,
+      size: 32,
+    ),
+  ),
+  
+  // Aksi yang dilakukan setelah item selesai digeser
+  onDismissed: (direction) async {
+    await notifDoc.reference.delete();    
+  },
+  
+  // Child adalah desain card notifikasi Anda yang sebelumnya
+  child: GestureDetector(
+    onTap: () {
+      // Jika diklik, tandai sudah dibaca di database dan pergi ke Maps
+      notifDoc.reference.update({'isRead': true});
+      Get.to(() => const MapsScreen());
+    },
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: (notif['isRead'] == true) ? Colors.white : const Color(0xFFF0FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: (notif['isRead'] == true) 
+              ? Colors.grey.shade100 
+              : AppColors.mint.withOpacity(0.3)
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02), 
+            blurRadius: 8, 
+            offset: const Offset(0, 2)
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
+            child: Icon(iconData, color: iconColor, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        notif['title'] ?? 'Notifikasi', 
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: 15, 
+                          color: (notif['isRead'] == true) ? Colors.black87 : AppColors.mint
+                        )
                       ),
-                    );
+                    ),
+                    if (notif['isRead'] == false)
+                      Container(
+                        width: 8, height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.redAccent, 
+                          shape: BoxShape.circle
+                        ),
+                      )
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  notif['message'] ?? '', 
+                  style: const TextStyle(color: Colors.black87, fontSize: 13, height: 1.4)
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  formattedTime, 
+                  style: const TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w500)
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    ),
+  ),
+);
                   },
                 );
               },

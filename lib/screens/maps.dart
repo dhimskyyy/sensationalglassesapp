@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
@@ -18,7 +16,8 @@ class MapsScreen extends StatefulWidget {
   State<MapsScreen> createState() => _MapsScreenState();
 }
 
-class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateMixin {
+class _MapsScreenState extends State<MapsScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _radarController;
   final HomeController homeC = Get.find<HomeController>();
   GoogleMapController? _mapController;
@@ -34,12 +33,12 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
   LatLng _currentDeviceLocation = const LatLng(-6.2088, 106.8456);
 
   Future<void> _getPolylineRoute() async {
-    LatLngBounds? bounds = await homeC.fetchPolylineRoute(_currentDeviceLocation);
-    
+    LatLngBounds? bounds = await homeC.fetchPolylineRoute(
+      _currentDeviceLocation,
+    );
+
     if (bounds != null && mounted) {
-      _mapController?.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 50),
-      );
+      _mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
     }
   }
 
@@ -109,7 +108,7 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _initLocationService(); 
+    _initLocationService();
     _radarController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -128,88 +127,132 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
   void dispose() {
     _recenterTimer?.cancel();
     _radarController.dispose();
-    _mapController?.dispose(); 
+    _mapController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryColor = Color(0xFF66C7AA); 
+    const Color primaryColor = Color(0xFF66C7AA);
     return Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
-            child: Obx(() => homeC.hasTunanetraData.value
-                ? _buildRealGoogleMap()
-                : _buildPlaceholderMap()),
+            child: Obx(
+              () => homeC.hasTunanetraData.value
+                  ? _buildRealGoogleMap()
+                  : _buildPlaceholderMap(),
+            ),
           ),
 
-          Obx(() => Positioned.fill(
-                child: ((homeC.latitude.value == 0.0 || homeC.isDeviceOff.value) && !homeC.isShowingRoute.value)
-                    ? Stack(
-                        children: [
-                          IgnorePointer(
-                            child: Container(
-                              color: Colors.white.withOpacity(0.7),
-                              padding: const EdgeInsets.only(bottom: 250),
-                              child: Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(
-                                      height: 220, width: 220,
-                                      child: Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          AnimatedBuilder(
-                                            animation: _radarController,
-                                            builder: (context, child) {
-                                              return Container(
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  border: Border.all(color: primaryColor.withOpacity(1 - _radarController.value), width: 3),
-                                                ),
-                                                width: 220 * _radarController.value,
-                                                height: 220 * _radarController.value,
-                                              );
-                                            },
-                                          ),
-                                          Container(
-                                            padding: const EdgeInsets.all(25),
-                                            decoration: BoxDecoration(color: primaryColor.withOpacity(0.1), shape: BoxShape.circle),
-                                            child: const Icon(Icons.explore, color: AppColors.mint, size: 60),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    const Text('Mencari perangkat...', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 50),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          Container(
+          Obx(
+            () => Positioned.fill(
+              // KUNCI UTAMA ADA DI SINI: Tambahkan homeC.hasTunanetraData.value &&
+              child:
+                  (homeC.hasTunanetraData.value &&
+                      (homeC.latitude.value == 0.0 ||
+                          homeC.isDeviceOff.value) &&
+                      !homeC.isShowingRoute.value)
+                  ? Stack(
+                      children: [
+                        IgnorePointer(
+                          child: Container(
+                            color: Colors.white.withOpacity(0.7),
                             padding: const EdgeInsets.only(bottom: 250),
                             child: Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const SizedBox(height: 290),
-                                  TextButton.icon(
-                                    onPressed: () => homeC.setupRealtimeIoT(),
-                                    icon: const Icon(Icons.refresh, color: AppColors.mint),
-                                    label: const Text('Refresh Sinyal', style: TextStyle(color: AppColors.mint, fontWeight: FontWeight.bold)),
+                                  SizedBox(
+                                    height: 220,
+                                    width: 220,
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        AnimatedBuilder(
+                                          animation: _radarController,
+                                          builder: (context, child) {
+                                            return Container(
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: primaryColor
+                                                      .withOpacity(
+                                                        1 -
+                                                            _radarController
+                                                                .value,
+                                                      ),
+                                                  width: 3,
+                                                ),
+                                              ),
+                                              width:
+                                                  220 * _radarController.value,
+                                              height:
+                                                  220 * _radarController.value,
+                                            );
+                                          },
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.all(25),
+                                          decoration: BoxDecoration(
+                                            color: primaryColor.withOpacity(
+                                              0.1,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.explore,
+                                            color: AppColors.mint,
+                                            size: 60,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
+                                  const SizedBox(height: 20),
+                                  const Text(
+                                    'Mencari perangkat...',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 50),
                                 ],
                               ),
                             ),
                           ),
-                        ],
-                      )
-                    : const SizedBox.shrink(),
-              )),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.only(bottom: 250),
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(height: 290),
+                                TextButton.icon(
+                                  onPressed: () => homeC.setupRealtimeIoT(),
+                                  icon: const Icon(
+                                    Icons.refresh,
+                                    color: AppColors.mint,
+                                  ),
+                                  label: const Text(
+                                    'Refresh Sinyal',
+                                    style: TextStyle(
+                                      color: AppColors.mint,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ),
 
           if (Navigator.canPop(context))
             Positioned(
@@ -222,7 +265,9 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)],
+                    boxShadow: [
+                      BoxShadow(color: Colors.black12, blurRadius: 8),
+                    ],
                   ),
                   child: const Icon(Icons.arrow_back, color: Colors.black87),
                 ),
@@ -262,13 +307,15 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
                     ],
                   ),
                 ),
-                
+
                 // PANEL BAWAH
-                Obx(() => _buildBottomPanel(
-                      primaryColor,
-                      homeC.hasTunanetraData.value,
-                      homeC.tunanetraData,
-                    )),
+                Obx(
+                  () => _buildBottomPanel(
+                    primaryColor,
+                    homeC.hasTunanetraData.value,
+                    homeC.tunanetraData,
+                  ),
+                ),
               ],
             ),
           ),
@@ -286,46 +333,38 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
       if (!_isUserInteracting &&
           _mapController != null &&
           homeC.latitude.value != 0.0 &&
-          !homeC.isShowingRoute.value) { 
+          !homeC.isShowingRoute.value) {
         _animateToDevice();
       }
 
       return GoogleMap(
         padding: EdgeInsets.only(
           top: MediaQuery.of(context).padding.top + 10,
-          bottom: 250, 
+          bottom: 250,
         ),
         initialCameraPosition: CameraPosition(target: targetLoc, zoom: 16),
         myLocationEnabled: true,
-        myLocationButtonEnabled: false, // Dimatikan agar tidak tertimpa panel  
-        zoomControlsEnabled: false, // Mematikan Zoom Bawaan Maps
-        compassEnabled: false, 
-        
+        myLocationButtonEnabled: false,
+        zoomControlsEnabled: false,
+        compassEnabled: false,
+
         onMapCreated: (controller) => _mapController = controller,
         onCameraMoveStarted: () => _onUserInteraction(),
-        
+
         polylines: Set<Polyline>.of(homeC.polylines),
-        
+
         markers: {
           if (homeC.latitude.value != 0.0)
             Marker(
               markerId: const MarkerId("iot_device"),
               position: targetLoc,
               icon: BitmapDescriptor.defaultMarkerWithHue(
-                homeC.isDeviceOff.value 
-                    ? BitmapDescriptor.hueRed 
-                    : HSVColor.fromColor(const Color(0xFF70CAB0)).hue
+                homeC.isDeviceOff.value
+                    ? BitmapDescriptor.hueRed
+                    : HSVColor.fromColor(const Color(0xFF70CAB0)).hue,
               ),
-            ),
-          
-          if (homeC.isShowingRoute.value)
-            Marker(
-              markerId: const MarkerId("user_location"),
-              position: _currentDeviceLocation,
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-              infoWindow: const InfoWindow(title: "Lokasi Anda"),
-            ),
-        },       
+            ),          
+        },
       );
     });
   }
@@ -364,20 +403,27 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // GESTURE DRAG/SWIPE UNTUK GARIS ABU-ABU
           GestureDetector(
             onVerticalDragEnd: (details) {
-              if (details.primaryVelocity! > 0) { // Geser ke bawah
-                setState(() { _isPanelExpanded = false; });
-              } else if (details.primaryVelocity! < 0) { // Geser ke atas
-                setState(() { _isPanelExpanded = true; });
+              if (details.primaryVelocity! > 0) {
+                // Geser ke bawah
+                setState(() {
+                  _isPanelExpanded = false;
+                });
+              } else if (details.primaryVelocity! < 0) {
+                // Geser ke atas
+                setState(() {
+                  _isPanelExpanded = true;
+                });
               }
             },
-            onTap: () { // Klik/Tap biasa
-              setState(() { _isPanelExpanded = !_isPanelExpanded; });
+            onTap: () {
+              setState(() {
+                _isPanelExpanded = !_isPanelExpanded;
+              });
             },
             child: Container(
-              color: Colors.transparent, // Area sentuh tak terlihat
+              color: Colors.transparent,
               width: double.infinity,
               padding: const EdgeInsets.only(top: 12, bottom: 8),
               child: Center(
@@ -392,7 +438,7 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
               ),
             ),
           ),
-          
+
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 30),
             child: Column(
@@ -409,7 +455,7 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          "Silakan hubungkan alat IoT di menu\ninput data terlebih dahulu.",
+                          "Silakan hubungkan perangkat Sensational Glasses \ndi menu input data terlebih dahulu.",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.grey,
@@ -425,16 +471,20 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
                       Row(
                         children: [
                           ClipOval(
-                            child: (data?['foto_url'] != null && data?['foto_url'] != "")
+                            child:
+                                (data?['foto_url'] != null &&
+                                    data?['foto_url'] != "")
                                 ? CachedNetworkImage(
                                     imageUrl: data!['foto_url'],
                                     width: 56,
                                     height: 56,
                                     fit: BoxFit.cover,
-                                    fadeInDuration: Duration.zero,  
-                                    fadeOutDuration: Duration.zero, 
-                                    placeholder: (context, url) => Container(color: Colors.transparent),
-                                    errorWidget: (context, url, error) => const Icon(Icons.person),
+                                    fadeInDuration: Duration.zero,
+                                    fadeOutDuration: Duration.zero,
+                                    placeholder: (context, url) =>
+                                        Container(color: Colors.transparent),
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(Icons.person),
                                   )
                                 : Image.asset(
                                     'assets/default_profile.png',
@@ -455,50 +505,139 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
                                     fontSize: 18,
                                   ),
                                 ),
-                                const Text(
-                                  "Tunanetra (Visually Impaired)",
-                                  style: TextStyle(color: Colors.grey),
-                                ),
+                                Obx(() {
+                                  Color dotColor;
+
+                                  switch (homeC.iotStatus.value) {
+                                    case "Aktif":
+                                      dotColor = Colors.green;
+                                      break;
+                                    case "Lowbat":
+                                      dotColor = Colors.orange;
+                                      break;
+                                    case "Offline":
+                                      dotColor = Colors.red;
+                                      break;
+                                    default:
+                                      dotColor = Colors.grey;
+                                  }
+
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.circle,
+                                          color: dotColor,
+                                          size: 10,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          homeC.iotStatus.value,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
                               ],
                             ),
                           ),
                           Obx(() {
                             Color bgColor = primaryColor;
-                            Widget content = const Icon(Icons.notifications_active, color: Colors.white, size: 22);
+                            Widget content = const Icon(
+                              Icons.notifications_active,
+                              color: Colors.white,
+                              size: 22,
+                            );
                             VoidCallback? onTap = () => homeC.toggleAlarm();
 
-                            switch (homeC.alarmState.value) {
-                              case AlarmState.idle:
-                                if (homeC.isDeviceOff.value) {
-                                  bgColor = Colors.grey.shade400;
-                                  content = const Icon(Icons.notifications_off, color: Colors.white, size: 22);
-                                } else {
+                            // 1. Desain Jika Alat Belum Terhubung
+                            if (!homeC.hasTunanetraData.value) {
+                              bgColor = Colors.grey.shade200;
+                              content = Icon(
+                                Icons.notifications_off,
+                                color: Colors.grey.shade500,
+                                size: 22,
+                              );
+                            }
+                            // 2. Desain Jika Alat Offline / Mati
+                            else if (homeC.isDeviceOff.value) {
+                              bgColor = Colors.grey.shade400;
+                              content = const Icon(
+                                Icons.notifications_off,
+                                color: Colors.white,
+                                size: 22,
+                              );
+                            }
+                            // 3. Desain Normal
+                            else {
+                              switch (homeC.alarmState.value) {
+                                case AlarmState.idle:
                                   bgColor = primaryColor;
-                                  content = const Icon(Icons.notifications_active, color: Colors.white, size: 22);
-                                }
-                                break;
-                              case AlarmState.loadingOn:
-                                bgColor = Colors.grey;
-                                content = const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2));
-                                onTap = null; 
-                                break;
-                              case AlarmState.countdown:
-                                bgColor = Colors.orange;
-                                content = Text(
-                                  "${homeC.countdownTimer.value}",
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                                );
-                                onTap = null; 
-                                break;
-                              case AlarmState.active:
-                                bgColor = Colors.redAccent;
-                                content = const Icon(Icons.stop_circle, color: Colors.white, size: 22);
-                                break;
-                              case AlarmState.loadingOff:
-                                bgColor = Colors.grey;
-                                content = const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2));
-                                onTap = null; 
-                                break;
+                                  content = const Icon(
+                                    Icons.notifications_active,
+                                    color: Colors.white,
+                                    size: 22,
+                                  );
+                                  break;
+                                case AlarmState.loadingOn:
+                                  bgColor = Colors.grey;
+                                  content = const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  );
+                                  onTap = null;
+                                  break;
+                                case AlarmState.countdown:
+                                  bgColor = Colors.orange;
+                                  content = Text(
+                                    "${homeC.countdownTimer.value}",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  );
+                                  onTap = null;
+                                  break;
+                                case AlarmState.active:
+                                  bgColor = Colors.redAccent;
+                                  content = const Icon(
+                                    Icons.stop_circle,
+                                    color: Colors.white,
+                                    size: 22,
+                                  );
+                                  break;
+                                case AlarmState.loadingOff:
+                                  bgColor = Colors.grey;
+                                  content = const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  );
+                                  onTap = null;
+                                  break;
+                              }
                             }
 
                             return GestureDetector(
@@ -511,12 +650,15 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
                                   color: bgColor,
                                   shape: BoxShape.circle,
                                   boxShadow: [
-                                    BoxShadow(
-                                      color: bgColor.withOpacity(0.4),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
-                                    )
-                                  ]
+                                    // Hilangkan bayangan jika sedang disable
+                                    if (homeC.hasTunanetraData.value &&
+                                        !homeC.isDeviceOff.value)
+                                      BoxShadow(
+                                        color: bgColor.withOpacity(0.4),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                  ],
                                 ),
                                 child: Center(child: content),
                               ),
@@ -524,7 +666,7 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
                           }),
                         ],
                       ),
-                      
+
                       // ============================================
                       // ANIMASI HIDE/SHOW LOKASI & DROPDOWN
                       // ============================================
@@ -540,7 +682,9 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF8FAFC),
                                       borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: Colors.grey.shade100),
+                                      border: Border.all(
+                                        color: Colors.grey.shade100,
+                                      ),
                                     ),
                                     child: Row(
                                       children: [
@@ -552,7 +696,8 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               const Text(
                                                 "LOKASI TERKINI",
@@ -581,25 +726,44 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
                                   ),
                                   const SizedBox(height: 12),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 4,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF8FAFC),
                                       borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: Colors.grey.shade100),
+                                      border: Border.all(
+                                        color: Colors.grey.shade100,
+                                      ),
                                     ),
                                     child: DropdownButtonHideUnderline(
                                       child: DropdownButton<TravelMode>(
-                                        value: homeC.selectedTravelMode.value, 
+                                        value: homeC.selectedTravelMode.value,
                                         isExpanded: true,
-                                        icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.mint),
+                                        icon: const Icon(
+                                          Icons.keyboard_arrow_down,
+                                          color: AppColors.mint,
+                                        ),
                                         items: const [
                                           DropdownMenuItem(
                                             value: TravelMode.driving,
                                             child: Row(
                                               children: [
-                                                Icon(Icons.directions_car, color: AppColors.mint, size: 22),
+                                                Icon(
+                                                  Icons.directions_car,
+                                                  color: AppColors.mint,
+                                                  size: 22,
+                                                ),
                                                 SizedBox(width: 12),
-                                                Text("Kendaraan (Motor/Mobil)", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87)),
+                                                Text(
+                                                  "Kendaraan (Motor/Mobil)",
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 14,
+                                                    color: Colors.black87,
+                                                  ),
+                                                ),
                                               ],
                                             ),
                                           ),
@@ -607,16 +771,28 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
                                             value: TravelMode.walking,
                                             child: Row(
                                               children: [
-                                                Icon(Icons.directions_walk, color: AppColors.mint, size: 22),
+                                                Icon(
+                                                  Icons.directions_walk,
+                                                  color: AppColors.mint,
+                                                  size: 22,
+                                                ),
                                                 SizedBox(width: 12),
-                                                Text("Jalan Kaki", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87)),
+                                                Text(
+                                                  "Jalan Kaki",
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 14,
+                                                    color: Colors.black87,
+                                                  ),
+                                                ),
                                               ],
                                             ),
                                           ),
                                         ],
                                         onChanged: (TravelMode? newValue) {
                                           if (newValue != null) {
-                                            homeC.selectedTravelMode.value = newValue; 
+                                            homeC.selectedTravelMode.value =
+                                                newValue;
                                             if (homeC.isShowingRoute.value) {
                                               _getPolylineRoute();
                                             }
@@ -634,46 +810,63 @@ class _MapsScreenState extends State<MapsScreen> with SingleTickerProviderStateM
                       SizedBox(
                         width: double.infinity,
                         height: 56,
-                        child: Obx(() => ElevatedButton(
-                          onPressed: () {
-                            if (homeC.isShowingRoute.value) {
-                              homeC.clearRoute();
-                              _animateToDevice(); 
-                            } else {
-                              if (!_isPanelExpanded) {
-                                setState(() { _isPanelExpanded = true; });
+                        child: Obx(
+                          () => ElevatedButton(
+                            onPressed: () {
+                              if (homeC.isShowingRoute.value) {
+                                homeC.clearRoute();
+                                _animateToDevice();
+                              } else {
+                                if (!_isPanelExpanded) {
+                                  setState(() {
+                                    _isPanelExpanded = true;
+                                  });
+                                }
+                                _getPolylineRoute();
                               }
-                              _getPolylineRoute();
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: homeC.isShowingRoute.value ? Colors.redAccent : primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: homeC.isShowingRoute.value
+                                  ? Colors.redAccent
+                                  : primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
                             ),
-                            elevation: 0,
-                          ),
-                          child: homeC.isLoadingRoute.value
-                              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      homeC.isShowingRoute.value ? "Tutup Rute" : "Rute",
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                            child: homeC.isLoadingRoute.value
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        homeC.isShowingRoute.value
+                                            ? "Tutup Rute"
+                                            : "Rute",
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Icon(
-                                      homeC.isShowingRoute.value ? Icons.close : Icons.directions, 
-                                      color: Colors.white
-                                    ),
-                                  ],
-                                ),
-                        )),
+                                      const SizedBox(width: 8),
+                                      Icon(
+                                        homeC.isShowingRoute.value
+                                            ? Icons.close
+                                            : Icons.directions,
+                                        color: Colors.white,
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        ),
                       ),
                     ],
                   ),

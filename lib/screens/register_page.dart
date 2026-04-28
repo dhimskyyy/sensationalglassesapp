@@ -61,8 +61,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     setState(() => isLoading = true);
 
-    try {
-      // 2. Buat User di Firebase Authentication
+    try {      
       UserCredential userCred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email.text.trim(),
         password: password.text.trim(),
@@ -71,10 +70,8 @@ class _RegisterPageState extends State<RegisterPage> {
       User? user = userCred.user;
 
       if (user != null) {
-        // 3. KIRIM LINK VERIFIKASI (Fitur Bawaan Firebase)
         await user.sendEmailVerification();
 
-        // 4. Simpan Data ke Firestore
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           "uid": user.uid,
           "firstName": firstName.text.trim(),
@@ -83,20 +80,10 @@ class _RegisterPageState extends State<RegisterPage> {
           "birthDate": birthDate.text.trim(),
           "phone": completePhoneNumber,
           "createdAt": DateTime.now(),
-          "is_verified": false, // Tetap false sampai link diklik & divalidasi
+          "is_verified": false,
         });
-
-        // 5. Arahkan ke Halaman Verifikasi
-        // Beri tahu user untuk cek inbox email mereka
-        Get.offAllNamed(Routes.EMAILVERIFICATIONPAGE, arguments: email.text.trim());
         
-        Get.snackbar(
-          "Cek Email", 
-          "Link verifikasi telah dikirim ke ${email.text.trim()}. Silakan klik link tersebut untuk aktifkan akun.", 
-          backgroundColor: AppColors.mint, 
-          colorText: Colors.white,
-          duration: const Duration(seconds: 5),
-        );
+        Get.offAllNamed(Routes.EMAILVERIFICATIONPAGE, arguments: email.text.trim());                
       }
 
     } on FirebaseAuthException catch (e) {
@@ -155,7 +142,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 10),
                         const Text(
                           "Daftar",
                           style: TextStyle(
@@ -164,7 +151,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 10),
                         Row(
                             children: [
                               const Text(
@@ -177,8 +164,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               const SizedBox(width: 8),
                               GestureDetector(
                                 onTap: () {
-                                  FocusScope.of(context).unfocus(); // Matikan kursor
-                                  Get.offNamed(Routes.LOGIN); // Kembali dan hancurkan halaman ini
+                                  FocusScope.of(context).unfocus();
+                                  Get.offNamed(Routes.LOGIN);
                                 },
                                 child: const Text(
                                   "Masuk",
@@ -417,7 +404,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
 
                         Center(
                           child: RichText(
