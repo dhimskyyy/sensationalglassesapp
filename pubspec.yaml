@@ -35,7 +35,6 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   flutter_launcher_icons: ^0.14.4
   change_app_package_name: ^1.5.0
-  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -47,15 +46,3 @@ flutter:
   assets:
     - assets/
     - .env
-
-flutter_native_splash:
-  color: "#70CAB0"
-  image: assets/logo_splash.png
-  fullscreen: true
-  android: true
-  ios: true
-  web: false
-
-  android_12:
-    color: "#70CAB0"
-    image: assets/logo_splash.png
