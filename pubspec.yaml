@@ -2,7 +2,7 @@ name: sensationalglassesapp
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.9.2
@@ -34,12 +34,13 @@ dependencies:
   url_launcher: ^6.3.2
   flutter_local_notifications: ^18.0.1
   flutter_launcher_icons: ^0.14.4
+  change_app_package_name: ^1.5.0
+  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  flutter_native_splash: any
 
 flutter:
   uses-material-design: true
@@ -48,9 +49,13 @@ flutter:
     - .env
 
 flutter_native_splash:
-  color: "#6ED9C7"
-  image: assets/logo.png
+  color: "#70CAB0"
+  image: assets/logo_splash.png
   fullscreen: true
   android: true
   ios: true
   web: false
+
+  android_12:
+    color: "#70CAB0"
+    image: assets/logo_splash.png

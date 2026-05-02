@@ -603,19 +603,4 @@ class HomeController extends GetxController {
         .doc(user.uid)
         .snapshots();
   }
-
-  void testSimpanNotif() {
-    _triggerNotification(
-      'info',
-      'TEST DATABASE PAKSAAN',
-      'Jika Anda melihat ini di riwayat, berarti Firestore aman 100%!',
-      'info',
-    );
-    Get.snackbar(
-      "Berhasil", 
-      "Notifikasi paksaan telah dikirim!",
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-    );
-  }
 }

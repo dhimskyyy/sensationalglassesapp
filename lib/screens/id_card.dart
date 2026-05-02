@@ -190,14 +190,13 @@ class IdCard extends StatelessWidget {
                           String statusText = homeC.iotStatus.value
                               .toUpperCase();
 
-                          if (homeC.iotStatus.value == "Active Now") {
+                          if (homeC.iotStatus.value == "Aktif") {
                             statusColor = AppColors.mint;
                           } else if (homeC.iotStatus.value == "Lowbat") {
                             statusColor = Colors.orangeAccent;
                           } else {
                             statusColor = Colors.redAccent;
-                            statusText =
-                                "OFF"; // Paksa teks jadi OFF jika status selain active/lowbat
+                            statusText = "OFF";
                           }
 
                           return Container(

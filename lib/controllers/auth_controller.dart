@@ -26,12 +26,38 @@ class AuthController extends GetxController {
   // ================== AUTH STATE ==================
   Rx<User?> firebaseUser = Rx<User?>(null);
 
+  bool _isInitialStart = true;
+
   @override
   void onInit() {
     firebaseUser.bindStream(_auth.authStateChanges());
     super.onInit();
   }
 
+  @override
+  void onReady() {
+    super.onReady();
+    ever(firebaseUser, _handleAuthChanged);
+  }
+
+  void _handleAuthChanged(User? user) {
+    if (_isInitialStart) {
+      _isInitialStart = false;
+      return; 
+    }
+
+    if (user == null) {
+      Get.offAllNamed(Routes.LOGIN);
+    } else {
+      bool isSocialLogin = user.providerData.any((p) => p.providerId != 'password');        
+      if (user.emailVerified || isSocialLogin) {
+        Get.offAllNamed(Routes.MAIN); 
+      } else {
+        Get.offAllNamed(Routes.EMAILVERIFICATIONPAGE, arguments: user.email);
+      }
+    }
+  }
+  
   @override
   void onClose() {
     emailController.dispose();

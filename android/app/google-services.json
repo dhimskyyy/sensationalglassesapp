@@ -7,18 +7,34 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:745404063740:android:b09dd3316865619303dc79",
+        "mobilesdk_app_id": "1:745404063740:android:0c803510249a529503dc79",
         "android_client_info": {
-          "package_name": "com.example.sensationalglassesapp"
+          "package_name": "com.dhimskripsi.sensationalglassesapp"
         }
       },
       "oauth_client": [
         {
-          "client_id": "745404063740-3nvigrf2f62apngpjoic1bakds7ot0pn.apps.googleusercontent.com",
+          "client_id": "745404063740-0ed4qil1pm8hjnippadg0o292965d91a.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.sensationalglassesapp",
+            "package_name": "com.dhimskripsi.sensationalglassesapp",
+            "certificate_hash": "9812562dc8137ca8d9abbc7f72743b8e81b75649"
+          }
+        },
+        {
+          "client_id": "745404063740-g1l505ne61ha1h1rsbhs9b75e2vli33p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dhimskripsi.sensationalglassesapp",
             "certificate_hash": "0fdbd9d41d4e16fef6038e8cbd40e260d891d414"
+          }
+        },
+        {
+          "client_id": "745404063740-taibclnptiuodqibr83ov7k2v56l6nre.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dhimskripsi.sensationalglassesapp",
+            "certificate_hash": "44f9b650d0e5a639cf0800b6d3ae70eb30418c39"
           }
         },
         {
@@ -39,10 +55,10 @@
               "client_type": 3
             },
             {
-              "client_id": "745404063740-t22alce9affjoa2s3m7ga2j7o6c12j7c.apps.googleusercontent.com",
+              "client_id": "745404063740-3hnithcden4j62kh9047k9np7vv30pgq.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.sensationalglassesapp"
+                "bundle_id": "com.dhimskripsi.sensationalglassesapp"
               }
             }
           ]

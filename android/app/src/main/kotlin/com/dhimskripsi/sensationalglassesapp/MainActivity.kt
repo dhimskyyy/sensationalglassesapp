@@ -1,4 +1,4 @@
-package com.example.sensationalglassesapp
+package com.dhimskripsi.sensationalglassesapp
 
 import io.flutter.embedding.android.FlutterActivity
 

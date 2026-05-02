@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import '../../screens/splash_screen.dart';
 import '../../screens/login_page.dart';
 import '../../screens/register_page.dart';
 import '../../screens/home_screen.dart';
@@ -17,13 +16,9 @@ import '../../screens/notification_history_page.dart';
 part 'app_routes.dart';
 
 class AppPages {
-  static const INITIAL = Routes.SPLASH;
+  static const INITIAL = Routes.LOGIN;
 
   static final pages = [
-    GetPage(
-      name: Routes.SPLASH,
-      page: () => const SplashScreen(),
-    ),
     GetPage(
       name: Routes.LOGIN,
       page: () => const LoginPage(),

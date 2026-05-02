@@ -1,6 +1,12 @@
 import java.util.Properties
 import java.io.FileInputStream
 
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 val envProperties = Properties()
 val envFile = rootProject.file("../.env")
 if (envFile.exists()) {
@@ -17,9 +23,18 @@ plugins {
 }
 
 android {
-    namespace = "com.example.sensationalglassesapp"
+    namespace = "com.dhimskripsi.sensationalglassesapp"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+            storeFile = keystoreProperties.getProperty("storeFile")?.let { file(it) }
+            storePassword = keystoreProperties.getProperty("storePassword")
+        }
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -32,7 +47,7 @@ android {
     }
 
     defaultConfig {        
-        applicationId = "com.example.sensationalglassesapp"
+        applicationId = "com.dhimskripsi.sensationalglassesapp"
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey ?: ""
         
         minSdk = flutter.minSdkVersion
@@ -44,7 +59,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

@@ -138,13 +138,7 @@ class ProfileScreen extends StatelessWidget {
                   icon: Icons.person_outline,
                   title: 'Edit Profile',
                   onTap: () => Get.to(() => const UserProfilePage()),
-                ),
-                _buildSettingTile(
-                  primaryColor: Colors.blueAccent, // Warna beda agar terlihat
-                  icon: Icons.bug_report,
-                  title: 'Test Notifikasi (Paksa)',
-                  onTap: () => homeC.testSimpanNotif(),
-                ),
+                ),               
                 _buildSettingTile(
                   primaryColor: AppColors.mint,
                   icon: Icons.badge_outlined,

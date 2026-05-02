@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>745404063740-t22alce9affjoa2s3m7ga2j7o6c12j7c.apps.googleusercontent.com</string>
+	<string>745404063740-3hnithcden4j62kh9047k9np7vv30pgq.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.745404063740-t22alce9affjoa2s3m7ga2j7o6c12j7c</string>
+	<string>com.googleusercontent.apps.745404063740-3hnithcden4j62kh9047k9np7vv30pgq</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>745404063740-3nvigrf2f62apngpjoic1bakds7ot0pn.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.sensationalglassesapp</string>
+	<string>com.dhimskripsi.sensationalglassesapp</string>
 	<key>PROJECT_ID</key>
 	<string>sensationalapp-111fc</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:745404063740:ios:d2352785fe9c3b8e03dc79</string>
+	<string>1:745404063740:ios:406fa8d9bdb746df03dc79</string>
 </dict>
 </plist>
