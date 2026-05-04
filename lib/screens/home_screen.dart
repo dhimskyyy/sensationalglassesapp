@@ -391,7 +391,7 @@ class _HomeScreenState extends State<HomeScreen>
           const Icon(Icons.link_off, color: Colors.grey, size: 48),
           const SizedBox(height: 16),
           const Text(
-            "Silakan hubungkan alat IoT di menu\ninput data terlebih dahulu.",
+            "Silakan hubungkan perangkat di menu\ninput data terlebih dahulu.",
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
           ),
@@ -705,13 +705,22 @@ class _HomeScreenState extends State<HomeScreen>
             color: Colors.grey.shade600,
           );
         }
-        // 2. Desain Jika Alat Offline / Mati
+        // 2. Desain Jika Lokasi GPS Belum Ditemukan
+        else if (homeC.latitude.value == 0.0) {
+          buttonColor = Colors.grey.shade400;
+          buttonText = "Harap Tunggu...";
+          buttonIcon = Icon(
+            Icons.gps_off,
+            color: Colors.grey.shade200,
+          );
+        }
+        // 3. Desain Jika Alat Offline / Mati
         else if (homeC.isDeviceOff.value) {
           buttonColor = Colors.grey.shade400;
           buttonText = "Alat Offline";
           buttonIcon = const Icon(Icons.notifications_off);
         }
-        // 3. Desain Normal
+        // 4. Desain Normal
         else {
           switch (homeC.alarmState.value) {
             case AlarmState.idle:
@@ -763,15 +772,15 @@ class _HomeScreenState extends State<HomeScreen>
           onPressed: onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: buttonColor,
-            // Jika belum ada alat, teksnya jadi abu-abu tua agar terbaca di atas tombol abu-abu muda
-            foregroundColor: !homeC.hasTunanetraData.value
+            // Jika belum ada alat atau GPS belum ditemukan, teksnya jadi abu-abu tua
+            foregroundColor: (!homeC.hasTunanetraData.value || homeC.latitude.value == 0.0)
                 ? Colors.grey.shade700
                 : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
             elevation:
-                (!homeC.hasTunanetraData.value || homeC.isDeviceOff.value)
+                (!homeC.hasTunanetraData.value || homeC.isDeviceOff.value || homeC.latitude.value == 0.0)
                 ? 0
                 : 5,
           ),

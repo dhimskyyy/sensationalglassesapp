@@ -455,7 +455,7 @@ class _MapsScreenState extends State<MapsScreen>
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          "Silakan hubungkan perangkat Sensational Glasses \ndi menu input data terlebih dahulu.",
+                          "Silakan hubungkan perangkat \ndi menu input data terlebih dahulu.",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.grey,

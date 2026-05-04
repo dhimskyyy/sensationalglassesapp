@@ -5,9 +5,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 
 import 'package:sensationalglassesapp/app/theme/app_colors.dart';
+import 'package:sensationalglassesapp/controllers/home_controller.dart';
 
 class InputDataTunanetraPage extends StatefulWidget {
   const InputDataTunanetraPage({super.key});
@@ -21,8 +23,8 @@ class _InputDataTunanetraPageState extends State<InputDataTunanetraPage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController ageController = TextEditingController();
   final TextEditingController bloodTypeController = TextEditingController();
-  final TextEditingController birthPlaceDateController =
-      TextEditingController();
+  final TextEditingController birthPlaceController = TextEditingController();
+  final TextEditingController birthDateController = TextEditingController();
 
   // Controller IOT Tetap
   final TextEditingController thingSpeakChannelController =
@@ -34,6 +36,7 @@ class _InputDataTunanetraPageState extends State<InputDataTunanetraPage> {
 
   bool _isObscureChannel = true;
   bool _isObscureKey = true;
+  bool _isSaving = false;
 
   File? _selectedImage;
   String? _existingFotoUrl;
@@ -47,8 +50,7 @@ class _InputDataTunanetraPageState extends State<InputDataTunanetraPage> {
       initials = nameParts[0][0].toUpperCase();
     }
 
-    // 2. Ambil Angka dari Tanggal Lahir (Contoh: 14 Agustus 1995 -> 14081995)
-    // Kita asumsikan format input user mengandung angka tanggal-bulan-tahun
+    // 2. Ambil Angka dari Tanggal Lahir
     String dateNumbers = birthDate.replaceAll(RegExp(r'[^0-9]'), '');
 
     // Jika pembersihan angka gagal/kosong, gunakan default
@@ -58,6 +60,32 @@ class _InputDataTunanetraPageState extends State<InputDataTunanetraPage> {
     String randomSuffix = "001";
 
     return "$dateNumbers-$initials-$randomSuffix";
+  }
+
+  Future<void> _pickDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000),
+      firstDate: DateTime(1920),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF66C7AA),
+              onPrimary: Colors.white,
+              onSurface: Colors.black87,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        birthDateController.text = DateFormat('dd-MM-yyyy').format(picked);
+      });
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -130,7 +158,24 @@ class _InputDataTunanetraPageState extends State<InputDataTunanetraPage> {
         nameController.text = data['nama_tunanetra'] ?? "";
         ageController.text = data['usia'] ?? "";
         bloodTypeController.text = data['golongan_darah'] ?? "";
-        birthPlaceDateController.text = data['tempat_tanggal_lahir'] ?? "";
+
+        // Handle split fields: try individual fields first, then fallback to combined
+        if (data['tempat_lahir'] != null && data['tempat_lahir'] != "") {
+          birthPlaceController.text = data['tempat_lahir'];
+        } else if (data['tempat_tanggal_lahir'] != null) {
+          // Fallback: parse from combined field (e.g. "Jakarta, 14 Agustus 1995")
+          String combined = data['tempat_tanggal_lahir'] ?? "";
+          if (combined.contains(',')) {
+            birthPlaceController.text = combined.split(',')[0].trim();
+            birthDateController.text = combined.split(',').sublist(1).join(',').trim();
+          } else {
+            birthPlaceController.text = combined;
+          }
+        }
+
+        if (data['tanggal_lahir'] != null && data['tanggal_lahir'] != "") {
+          birthDateController.text = data['tanggal_lahir'];
+        }
 
         // Mengisi data IoT jika tersedia
         thingSpeakChannelController.text = data['thingspeak_channel_id'] ?? "";
@@ -291,11 +336,28 @@ class _InputDataTunanetraPageState extends State<InputDataTunanetraPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Kolom Tempat, Tanggal Lahir (Full Width)
-                _buildModernTextField(
-                  controller: birthPlaceDateController,
-                  label: "Tempat, Tanggal Lahir",
-                  icon: Icons.location_on_outlined,
+                // Row untuk Tempat Lahir dan Tanggal Lahir (Sejajar)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _buildModernTextField(
+                        controller: birthPlaceController,
+                        label: "Tempat Lahir",
+                        icon: Icons.location_on_outlined,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildModernTextField(
+                        controller: birthDateController,
+                        label: "Tanggal Lahir",
+                        icon: Icons.calendar_today_outlined,
+                        readOnly: true,
+                        onTap: _pickDate,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 32),
 
@@ -356,7 +418,7 @@ const Align(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: _isSaving ? null : () {
                       if (_formKey.currentState!.validate()) {
                         _saveData();
                       } else {
@@ -383,7 +445,16 @@ const Align(
                       ),
                       elevation: 0,
                     ),
-                    child: const Row(
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
@@ -419,7 +490,9 @@ const Align(
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     bool autoUpperCase = false,
-    bool obscureText = false, // <-- TAMBAHKAN PARAMETER INI
+    bool obscureText = false,
+    bool readOnly = false,
+    VoidCallback? onTap,
     Widget? suffixIcon,
   }) {
     return Column(
@@ -437,6 +510,8 @@ const Align(
         TextFormField(
           controller: controller,
           obscureText: obscureText,
+          readOnly: readOnly,
+          onTap: onTap,
           keyboardType: keyboardType,
           textAlignVertical: TextAlignVertical.center,
           style: const TextStyle(fontSize: 15),
@@ -482,8 +557,30 @@ const Align(
 
   // LOGIKA SIMPAN (Disesuaikan dengan Field Baru)
   Future<void> _saveData() async {
+    setState(() => _isSaving = true);
     try {
       String uid = FirebaseAuth.instance.currentUser!.uid;
+
+      // Validate ThingSpeak credentials before saving
+      String channelId = thingSpeakChannelController.text.trim();
+      String readKey = thingSpeakReadKeyController.text.trim();
+
+      bool isValid = await validateThingSpeakCredentials(channelId, readKey);
+      if (!isValid) {
+        setState(() => _isSaving = false);
+        Get.snackbar(
+          "Data ThingSpeak Salah",
+          "Silakan masukkan data ThingSpeak dengan benar.",
+          backgroundColor: AppColors.error,
+          colorText: Colors.white,
+          icon: const Icon(Icons.error_outline, color: Colors.white),
+          snackPosition: SnackPosition.TOP,
+          duration: const Duration(seconds: 4),
+          margin: const EdgeInsets.all(15),
+        );
+        return;
+      }
+
       String? finalFotoUrl = _existingFotoUrl;
 
       if (_selectedImage != null) {
@@ -499,6 +596,9 @@ const Align(
       var existingData = Get.arguments;
       String idNumber;
 
+      // Combine birth place and date for backward compatibility
+      String combinedBirthPlaceDate = "${birthPlaceController.text}, ${birthDateController.text}";
+
       if (existingData != null && existingData['id_number'] != null) {
         // Jika edit, gunakan ID yang sudah ada
         idNumber = existingData['id_number'];
@@ -506,7 +606,7 @@ const Align(
         // Jika data baru, buat ID otomatis
         idNumber = _generateIdNumber(
           nameController.text,
-          birthPlaceDateController.text,
+          birthDateController.text,
         );
       }
 
@@ -517,13 +617,17 @@ const Align(
             "id_number": idNumber,
             "nama_tunanetra": nameController.text,
             "usia": ageController.text,
-            "golongan_darah": bloodTypeController.text, // Field baru
-            "tempat_tanggal_lahir": birthPlaceDateController.text, // Field baru
+            "golongan_darah": bloodTypeController.text,
+            "tempat_lahir": birthPlaceController.text,
+            "tanggal_lahir": birthDateController.text,
+            "tempat_tanggal_lahir": combinedBirthPlaceDate,
             "foto_url": finalFotoUrl,
-            "thingspeak_channel_id": thingSpeakChannelController.text,
-            "thingspeak_read_key": thingSpeakReadKeyController.text,
+            "thingspeak_channel_id": channelId,
+            "thingspeak_read_key": readKey,
             "updated_at": FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
+
+      setState(() => _isSaving = false);
 
       Get.snackbar(
         "Berhasil",
@@ -544,6 +648,7 @@ const Align(
         }
       });
     } catch (e) {
+      setState(() => _isSaving = false);
       Get.snackbar(
         "Error",
         "Gagal menyimpan: $e",

@@ -26,7 +26,11 @@ class AuthController extends GetxController {
   // ================== AUTH STATE ==================
   Rx<User?> firebaseUser = Rx<User?>(null);
 
-  bool _isInitialStart = true;
+  // Flag to skip auth state changes during initial app startup.
+  // We skip the first TWO emissions because authStateChanges() can emit
+  // null first (before session is restored) and then the actual user.
+  // The initial routing is handled by main.dart, so we must not interfere.
+  int _initialSkipCount = 2;
 
   @override
   void onInit() {
@@ -41,17 +45,26 @@ class AuthController extends GetxController {
   }
 
   void _handleAuthChanged(User? user) {
-    if (_isInitialStart) {
-      _isInitialStart = false;
-      return; 
+    // Skip initial emissions - the initial route is already set by main.dart
+    if (_initialSkipCount > 0) {
+      _initialSkipCount--;
+      return;
     }
 
     if (user == null) {
-      Get.offAllNamed(Routes.LOGIN);
+      // Only navigate to login if we're not already on the login or register page
+      final currentRoute = Get.currentRoute;
+      if (currentRoute != Routes.LOGIN && currentRoute != Routes.REGISTER) {
+        Get.offAllNamed(Routes.LOGIN);
+      }
     } else {
       bool isSocialLogin = user.providerData.any((p) => p.providerId != 'password');        
       if (user.emailVerified || isSocialLogin) {
-        Get.offAllNamed(Routes.MAIN); 
+        // Only navigate to MAIN if we're not already there
+        final currentRoute = Get.currentRoute;
+        if (currentRoute != Routes.MAIN) {
+          Get.offAllNamed(Routes.MAIN);
+        }
       } else {
         Get.offAllNamed(Routes.EMAILVERIFICATIONPAGE, arguments: user.email);
       }

@@ -31,7 +31,10 @@ void main() async {
 
   Get.put(AuthController(), permanent: true);
 
-  User? currentUser = FirebaseAuth.instance.currentUser;
+  // Use authStateChanges().first to reliably wait for Firebase to restore
+  // the persisted session. The synchronous currentUser can sometimes be null
+  // on cold start before the session is fully restored.
+  User? currentUser = await FirebaseAuth.instance.authStateChanges().first;
   String firstRoute = AppPages.INITIAL; // Secara default ke Login
 
   if (currentUser != null) {

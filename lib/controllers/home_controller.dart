@@ -13,6 +13,26 @@ import '../screens/maps.dart';
 
 enum AlarmState { idle, loadingOn, countdown, active, loadingOff }
 
+/// Validates ThingSpeak credentials by making a test API call.
+/// Returns true if the channel ID and read key are valid and registered.
+Future<bool> validateThingSpeakCredentials(String channelId, String readKey) async {
+  try {
+    final url =
+        "https://api.thingspeak.com/channels/$channelId/feeds.json?api_key=$readKey&results=1";
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      // A valid response will have a 'channel' key with channel info
+      if (data is Map && data.containsKey('channel')) {
+        return true;
+      }
+    }
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
 class HomeController extends GetxController {
   var signal = "0 dBm".obs;
   var battery = "0".obs;
@@ -44,6 +64,10 @@ class HomeController extends GetxController {
 
   Timer? _timer;
   StreamSubscription? _iotSubscription;
+
+  // Track current ThingSpeak credentials to detect changes
+  String _currentChannelID = "";
+  String _currentReadKey = "";
   StreamSubscription? _userSubscription;
   StreamSubscription? _stopSubscription;
 
@@ -281,6 +305,9 @@ class HomeController extends GetxController {
     if (user == null) return;
     String uid = user.uid;
 
+    // Cancel any existing subscription before creating a new one
+    _iotSubscription?.cancel();
+
     _iotSubscription = FirebaseFirestore.instance
         .collection("tunanetra_data")
         .doc(uid)
@@ -292,6 +319,27 @@ class HomeController extends GetxController {
               String readKey = doc.data()?['thingspeak_read_key'] ?? "";
 
               if (channelID.isNotEmpty && readKey.isNotEmpty) {
+                // Detect if ThingSpeak credentials have changed
+                bool credentialsChanged = (channelID != _currentChannelID ||
+                    readKey != _currentReadKey);
+
+                if (credentialsChanged) {
+                  // Reset IoT sensor data when credentials change
+                  _timer?.cancel();
+                  signal.value = "0 dBm";
+                  battery.value = "0";
+                  distance.value = "0";
+                  latitude.value = 0.0;
+                  longitude.value = 0.0;
+                  isDeviceOff.value = false;
+                  iotStatus.value = "Offline";
+                  clearRoute();
+
+                  // Update tracked credentials
+                  _currentChannelID = channelID;
+                  _currentReadKey = readKey;
+                }
+
                 _timer?.cancel();
                 fetchThingSpeakData(channelID, readKey);
                 _timer = Timer.periodic(const Duration(seconds: 15), (timer) {
@@ -415,7 +463,13 @@ class HomeController extends GetxController {
 
   Future<LatLngBounds?> fetchPolylineRoute(LatLng originLoc) async {
     if (latitude.value == 0.0) {
-      Get.snackbar("Menunggu", "Lokasi alat IoT belum ditemukan.");
+      Get.snackbar(
+        "Menunggu",
+        "Lokasi perangkat belum ditemukan.",
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
       return null;
     }
     isLoadingRoute.value = true;
@@ -486,7 +540,7 @@ class HomeController extends GetxController {
     if (!hasTunanetraData.value) {
       Get.snackbar(
         "Akses Ditolak",
-        "Silakan hubungkan alat IoT di menu input data terlebih dahulu.",
+        "Silakan hubungkan perangkat di menu input data terlebih dahulu.",
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
@@ -494,11 +548,23 @@ class HomeController extends GetxController {
       return;
     }
 
-    // KONDISI 2: Alat sedang mati / offline / tidak ada sinyal
+    // KONDISI 2: Lokasi perangkat IoT belum ditemukan (GPS belum terdeteksi)
+    if (latitude.value == 0.0) {
+      Get.snackbar(
+        "Menunggu",
+        "Lokasi perangkat belum ditemukan.",
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+      return;
+    }
+
+    // KONDISI 3: Alat sedang mati / offline / tidak ada sinyal
     if (isDeviceOff.value) {
       Get.snackbar(
         "Perangkat Offline",
-        "Alat IoT sedang mati atau kehilangan sinyal. Perintah alarm dibatalkan.",
+        "Perangkat sedang mati atau kehilangan sinyal. Perintah alarm dibatalkan.",
         backgroundColor: Colors.orange,
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
