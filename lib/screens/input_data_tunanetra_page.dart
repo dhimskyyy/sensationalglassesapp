@@ -31,11 +31,14 @@ class _InputDataTunanetraPageState extends State<InputDataTunanetraPage> {
       TextEditingController();
   final TextEditingController thingSpeakReadKeyController =
       TextEditingController();
+  final TextEditingController thingSpeakWriteKeyController =
+      TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
   bool _isObscureChannel = true;
   bool _isObscureKey = true;
+  bool _isObscureWriteKey = true;
   bool _isSaving = false;
 
   File? _selectedImage;
@@ -52,8 +55,7 @@ class _InputDataTunanetraPageState extends State<InputDataTunanetraPage> {
 
     // 2. Ambil Angka dari Tanggal Lahir
     String dateNumbers = birthDate.replaceAll(RegExp(r'[^0-9]'), '');
-
-    // Jika pembersihan angka gagal/kosong, gunakan default
+  
     if (dateNumbers.isEmpty) dateNumbers = "00000000";
 
     // 3. Tambahkan nomor urut/acak (Contoh: 001)
@@ -180,6 +182,7 @@ class _InputDataTunanetraPageState extends State<InputDataTunanetraPage> {
         // Mengisi data IoT jika tersedia
         thingSpeakChannelController.text = data['thingspeak_channel_id'] ?? "";
         thingSpeakReadKeyController.text = data['thingspeak_read_key'] ?? "";
+        thingSpeakWriteKeyController.text = data['thingspeak_write_key'] ?? "";
 
         _existingFotoUrl = data['foto_url'];
       });
@@ -411,6 +414,24 @@ const Align(
                     },
                   ),
                 ),
+                const SizedBox(height: 20),
+                _buildModernTextField(
+                  controller: thingSpeakWriteKeyController,
+                  label: "Write API Key",
+                  icon: Icons.edit_outlined,
+                  obscureText: _isObscureWriteKey,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isObscureWriteKey ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isObscureWriteKey = !_isObscureWriteKey;
+                      });
+                    },
+                  ),
+                ),
                 const SizedBox(height: 48),
 
                 // 3. Tombol Simpan
@@ -624,6 +645,7 @@ const Align(
             "foto_url": finalFotoUrl,
             "thingspeak_channel_id": channelId,
             "thingspeak_read_key": readKey,
+            "thingspeak_write_key": thingSpeakWriteKeyController.text.trim(),
             "updated_at": FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
 

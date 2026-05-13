@@ -52,7 +52,7 @@ class AboutAppPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Alat Bantu Penyandang Tunanetra Menggunakan\nMachine Learning Terintegrasi Internet of Things', // Saya tambahkan enter (\n) dan perbaiki typo
+              'Alat Bantu Penyandang Tunanetra Menggunakan\nMachine Learning Terintegrasi Internet of Things',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.4, fontWeight: FontWeight.w500),
             ),

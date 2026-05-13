@@ -185,10 +185,9 @@ class IdCard extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerRight,
                         child: Obx(() {
-                          // Tentukan warna berdasarkan status dari controller
+                          // Menggunakan warna dari controller, dengan override khusus ID Card
                           Color statusColor;
-                          String statusText = homeC.iotStatus.value
-                              .toUpperCase();
+                          String statusText = homeC.iotStatus.value.toUpperCase();
 
                           if (homeC.iotStatus.value == "Aktif") {
                             statusColor = AppColors.mint;

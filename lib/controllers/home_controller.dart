@@ -44,6 +44,20 @@ class HomeController extends GetxController {
   var iotStatus = "Offline".obs;
   var isDeviceOff = false.obs;
 
+  // Reactive getter: status dot color (centralized logic for all screens)
+  Color get statusDotColor {
+    switch (iotStatus.value) {
+      case "Aktif":
+        return Colors.green;
+      case "Lowbat":
+        return Colors.orange;
+      case "Offline":
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
   var userName = "User".obs;
   var userPhone = "".obs;
   var userBirthDate = "".obs;
@@ -534,7 +548,19 @@ class HomeController extends GetxController {
   }
 
   Future<void> toggleAlarm() async {
-    final String writeApiKey = "FGXPQPS5QMSCU7UC";
+    final String writeApiKey = tunanetraData['thingspeak_write_key'] ?? "";
+
+    // KONDISI 0: Write API Key tidak tersedia
+    if (writeApiKey.isEmpty) {
+      Get.snackbar(
+        "Alarm Tidak Tersedia",
+        "Silakan lengkapi data Tunanetra terlebih dahulu.",
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+      return;
+    }
 
     // KONDISI 1: Belum punya alat / Data dihapus
     if (!hasTunanetraData.value) {

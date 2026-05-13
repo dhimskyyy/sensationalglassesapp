@@ -567,21 +567,7 @@ class _HomeScreenState extends State<HomeScreen>
                         const SizedBox(height: 8),
 
                         Obx(() {
-                          Color dotColor;
-
-                          switch (homeC.iotStatus.value) {
-                            case "Aktif":
-                              dotColor = Colors.green;
-                              break;
-                            case "Lowbat":
-                              dotColor = Colors.orange;
-                              break;
-                            case "Offline":
-                              dotColor = Colors.red;
-                              break;
-                            default:
-                              dotColor = Colors.grey;
-                          }
+                          final Color dotColor = homeC.statusDotColor;
 
                           return Container(
                             padding: const EdgeInsets.symmetric(
@@ -605,7 +591,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                   ),
-                                  ),
+                                ),
                               ],
                             ),
                           );
@@ -709,10 +695,7 @@ class _HomeScreenState extends State<HomeScreen>
         else if (homeC.latitude.value == 0.0) {
           buttonColor = Colors.grey.shade400;
           buttonText = "Harap Tunggu...";
-          buttonIcon = Icon(
-            Icons.gps_off,
-            color: Colors.grey.shade200,
-          );
+          buttonIcon = Icon(Icons.gps_off, color: Colors.grey.shade200);
         }
         // 3. Desain Jika Alat Offline / Mati
         else if (homeC.isDeviceOff.value) {
@@ -773,14 +756,17 @@ class _HomeScreenState extends State<HomeScreen>
           style: ElevatedButton.styleFrom(
             backgroundColor: buttonColor,
             // Jika belum ada alat atau GPS belum ditemukan, teksnya jadi abu-abu tua
-            foregroundColor: (!homeC.hasTunanetraData.value || homeC.latitude.value == 0.0)
+            foregroundColor:
+                (!homeC.hasTunanetraData.value || homeC.latitude.value == 0.0)
                 ? Colors.grey.shade700
                 : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
             elevation:
-                (!homeC.hasTunanetraData.value || homeC.isDeviceOff.value || homeC.latitude.value == 0.0)
+                (!homeC.hasTunanetraData.value ||
+                    homeC.isDeviceOff.value ||
+                    homeC.latitude.value == 0.0)
                 ? 0
                 : 5,
           ),

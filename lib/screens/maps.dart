@@ -506,21 +506,7 @@ class _MapsScreenState extends State<MapsScreen>
                                   ),
                                 ),
                                 Obx(() {
-                                  Color dotColor;
-
-                                  switch (homeC.iotStatus.value) {
-                                    case "Aktif":
-                                      dotColor = Colors.green;
-                                      break;
-                                    case "Lowbat":
-                                      dotColor = Colors.orange;
-                                      break;
-                                    case "Offline":
-                                      dotColor = Colors.red;
-                                      break;
-                                    default:
-                                      dotColor = Colors.grey;
-                                  }
+                                  final Color dotColor = homeC.statusDotColor;
 
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
@@ -573,7 +559,16 @@ class _MapsScreenState extends State<MapsScreen>
                                 size: 22,
                               );
                             }
-                            // 2. Desain Jika Alat Offline / Mati
+                            // 2. Desain Jika Lokasi GPS Belum Ditemukan
+                            else if (homeC.latitude.value == 0.0) {
+                              bgColor = Colors.grey.shade400;
+                              content = Icon(
+                                Icons.gps_off,
+                                color: Colors.grey.shade200,
+                                size: 22,
+                              );
+                            }
+                            // 3. Desain Jika Alat Offline / Mati
                             else if (homeC.isDeviceOff.value) {
                               bgColor = Colors.grey.shade400;
                               content = const Icon(
@@ -582,7 +577,7 @@ class _MapsScreenState extends State<MapsScreen>
                                 size: 22,
                               );
                             }
-                            // 3. Desain Normal
+                            // 4. Desain Normal
                             else {
                               switch (homeC.alarmState.value) {
                                 case AlarmState.idle:
