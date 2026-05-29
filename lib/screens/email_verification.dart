@@ -63,7 +63,10 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                       // Subtitle yang disesuaikan
                       Text(
                         'Kami telah mengirimkan link verifikasi ke:\n$emailUser',
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -95,7 +98,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                             fontWeight: FontWeight.w700,
                           ),
                           textAlign: TextAlign.center,
-                          
                         ),
                         const SizedBox(height: 8),
                         const Text(
@@ -104,11 +106,12 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                           style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                         const SizedBox(height: 24),
-                        
+
                         Center(
                           child: GestureDetector(
                             onTap: () {
-                              Get.find<AuthController>().resendVerificationEmail();
+                              Get.find<AuthController>()
+                                  .resendVerificationEmail();
                             },
                             child: const Text(
                               'Kirim Ulang Link',
@@ -120,9 +123,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                             ),
                           ),
                         ),
-                                                
+
                         const Spacer(),
-                        
+
                         // TOMBOL UTAMA: CEK STATUS
                         SizedBox(
                           height: 48,
@@ -131,7 +134,8 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                                 ? null
                                 : () async {
                                     setState(() => _isLoading = true);
-                                    await Get.find<AuthController>().reloadUserAndCheckVerification();
+                                    await Get.find<AuthController>()
+                                        .reloadUserAndCheckVerification();
                                     setState(() => _isLoading = false);
                                   },
                             style: ElevatedButton.styleFrom(
@@ -162,11 +166,13 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                         ),
 
                         const SizedBox(height: 16),
-                        
+
                         // KEMBALI KE LOGIN
                         Center(
                           child: GestureDetector(
-                            onTap: () => Get.offAllNamed(Routes.LOGIN),
+                            onTap: () async {
+                              await Get.find<AuthController>().signOut();
+                            },
                             child: const Text(
                               'Batal',
                               style: TextStyle(

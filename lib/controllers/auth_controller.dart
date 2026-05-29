@@ -26,10 +26,6 @@ class AuthController extends GetxController {
   // ================== AUTH STATE ==================
   Rx<User?> firebaseUser = Rx<User?>(null);
 
-  // Flag to skip auth state changes during initial app startup.
-  // We skip the first TWO emissions because authStateChanges() can emit
-  // null first (before session is restored) and then the actual user.
-  // The initial routing is handled by main.dart, so we must not interfere.
   int _initialSkipCount = 2;
 
   @override
@@ -45,7 +41,6 @@ class AuthController extends GetxController {
   }
 
   void _handleAuthChanged(User? user) {
-    // Skip initial emissions - the initial route is already set by main.dart
     if (_initialSkipCount > 0) {
       _initialSkipCount--;
       return;
@@ -58,7 +53,9 @@ class AuthController extends GetxController {
         Get.offAllNamed(Routes.LOGIN);
       }
     } else {
-      bool isSocialLogin = user.providerData.any((p) => p.providerId != 'password');        
+      bool isSocialLogin =
+          user.providerData.any((p) => p.providerId != 'password');
+
       if (user.emailVerified || isSocialLogin) {
         // Only navigate to MAIN if we're not already there
         final currentRoute = Get.currentRoute;
@@ -66,11 +63,14 @@ class AuthController extends GetxController {
           Get.offAllNamed(Routes.MAIN);
         }
       } else {
-        Get.offAllNamed(Routes.EMAILVERIFICATIONPAGE, arguments: user.email);
+        Get.offAllNamed(
+          Routes.EMAILVERIFICATIONPAGE,
+          arguments: user.email,
+        );
       }
     }
   }
-  
+
   @override
   void onClose() {
     emailController.dispose();
@@ -119,7 +119,10 @@ class AuthController extends GetxController {
   Future<void> resendVerificationEmail() async {
     try {
       await _auth.currentUser?.sendEmailVerification();
-      _showSuccess("Terkirim", "Link verifikasi baru telah dikirim ke email Anda.");
+      _showSuccess(
+        "Terkirim",
+        "Link verifikasi baru telah dikirim ke email Anda.",
+      );
     } catch (e) {
       _showError("Gagal mengirim ulang link verifikasi.");
     }
@@ -134,12 +137,77 @@ class AuthController extends GetxController {
         await _firestore.collection('users').doc(user.uid).update({
           "is_verified": true,
         });
+
         Get.offAllNamed(Routes.MAIN);
       } else {
         _showError("Email Anda belum diverifikasi.");
       }
     } catch (e) {
       _showError("Gagal memperbarui status verifikasi.");
+    }
+  }
+
+  // ================== REGISTER EMAIL ==================
+  Future<void> registerWithEmailAndPassword({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String birthDate,
+    required String phone,
+    required String password,
+  }) async {
+    try {
+      UserCredential userCred =
+          await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
+
+      User? user = userCred.user;
+
+      if (user != null) {
+        await user.sendEmailVerification();
+
+        await _firestore.collection('users').doc(user.uid).set({
+          "uid": user.uid,
+          "firstName": firstName.trim(),
+          "lastName": lastName.trim(),
+          "email": email.trim(),
+          "birthDate": birthDate.trim(),
+          "phone": phone,
+          "createdAt": DateTime.now(),
+          "is_verified": false,
+        });
+
+        Get.offAllNamed(
+          Routes.EMAILVERIFICATIONPAGE,
+          arguments: email.trim(),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String message = "Terjadi kesalahan";
+
+      if (e.code == 'email-already-in-use') {
+        message = "Email sudah terdaftar";
+      }
+
+      if (e.code == 'weak-password') {
+        message = "Password terlalu lemah";
+      }
+
+      Get.snackbar(
+        "Error",
+        message,
+        backgroundColor: AppColors.error,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        "Error",
+        e.toString(),
+        backgroundColor: AppColors.error,
+        colorText: Colors.white,
+      );
     }
   }
 
@@ -199,7 +267,7 @@ class AuthController extends GetxController {
         "uid": user.uid,
         "firstName": firstName,
         "lastName": lastName,
-        "email": googleUser.email, 
+        "email": googleUser.email,
         "photoUrl": user.photoURL ?? "",
         "is_verified": true,
       }, SetOptions(merge: true));
@@ -238,7 +306,7 @@ class AuthController extends GetxController {
         "uid": user.uid,
         "firstName": firstName,
         "lastName": lastName,
-        "email": fbEmail, 
+        "email": fbEmail,
         "photoUrl": user.photoURL ?? "",
         "is_verified": true,
       }, SetOptions(merge: true));
@@ -253,7 +321,10 @@ class AuthController extends GetxController {
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      _showSuccess("Terkirim", "Link reset password telah dikirim ke $email");
+      _showSuccess(
+        "Terkirim",
+        "Link reset password telah dikirim ke $email",
+      );
     } on FirebaseAuthException catch (e) {
       String message = "Gagal mengirim email reset";
 
@@ -277,24 +348,30 @@ class AuthController extends GetxController {
       await _auth.signOut();
 
       clearFields();
-      Get.offAllNamed(Routes.LOGIN); 
-      
+      Get.offAllNamed(Routes.LOGIN);
     } catch (e) {
       _showError("Gagal logout: $e");
     }
   }
 
   // ================== CUSTOM BEAUTIFUL SNACKBARS ==================
-  
+
   void _showSuccess(String title, String message) {
     Get.snackbar(
       title,
       message,
       backgroundColor: AppColors.mint,
       colorText: Colors.white,
-      icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 28),
+      icon: const Icon(
+        Icons.check_circle_outline,
+        color: Colors.white,
+        size: 28,
+      ),
       snackPosition: SnackPosition.TOP,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      margin: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 20,
+      ),
       borderRadius: 16,
       duration: const Duration(seconds: 4),
       boxShadows: [
@@ -311,11 +388,18 @@ class AuthController extends GetxController {
     Get.snackbar(
       "Pemberitahuan",
       message,
-      backgroundColor: const Color(0xFFFF5C5C), // Warna merah lembut tapi tegas
+      backgroundColor: const Color(0xFFFF5C5C),
       colorText: Colors.white,
-      icon: const Icon(Icons.error_outline, color: Colors.white, size: 28),
+      icon: const Icon(
+        Icons.error_outline,
+        color: Colors.white,
+        size: 28,
+      ),
       snackPosition: SnackPosition.TOP,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      margin: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 20,
+      ),
       borderRadius: 16,
       duration: const Duration(seconds: 4),
       boxShadows: [
