@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:sensationalglassesapp/controllers/home_controller.dart';
 
 import 'package:sensationalglassesapp/app/theme/app_colors.dart';
@@ -278,44 +277,6 @@ class AuthController extends GetxController {
     }
   }
 
-  // ================== FACEBOOK LOGIN ==================
-  Future<void> signInWithFacebook() async {
-    try {
-      final result = await FacebookAuth.instance.login();
-      if (result.status != LoginStatus.success) return;
-
-      final credential = FacebookAuthProvider.credential(
-        result.accessToken!.token,
-      );
-
-      final userCredential = await _auth.signInWithCredential(credential);
-      final user = userCredential.user;
-
-      if (user == null) return;
-
-      final names = user.displayName?.split(' ') ?? [];
-      final firstName = names.isNotEmpty ? names.first : "User";
-      final lastName = names.length > 1 ? names.sublist(1).join(' ') : "";
-
-      String fbEmail = user.email ?? "";
-      if (fbEmail.isEmpty && user.providerData.isNotEmpty) {
-        fbEmail = user.providerData.first.email ?? "";
-      }
-
-      await _firestore.collection('users').doc(user.uid).set({
-        "uid": user.uid,
-        "firstName": firstName,
-        "lastName": lastName,
-        "email": fbEmail,
-        "photoUrl": user.photoURL ?? "",
-        "is_verified": true,
-      }, SetOptions(merge: true));
-
-      Get.offAllNamed(Routes.MAIN);
-    } catch (e) {
-      _showError("Login Facebook dibatalkan atau gagal.");
-    }
-  }
 
   // ================== LUPA PASSWORD ==================
   Future<void> sendPasswordResetEmail(String email) async {
@@ -344,7 +305,6 @@ class AuthController extends GetxController {
       }
 
       await GoogleSignIn().signOut();
-      await FacebookAuth.instance.logOut();
       await _auth.signOut();
 
       clearFields();

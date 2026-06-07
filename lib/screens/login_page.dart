@@ -252,76 +252,36 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 22),
 
                           // SOCIAL LOGIN
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: () => Get.find<AuthController>()
-                                      .signInWithGoogle(),
-                                  style: OutlinedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    side: BorderSide(
-                                      color: Colors.grey.shade200,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Image.asset(
-                                        "assets/google.png",
-                                        width: 20,
-                                        height: 20,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      const Text(
-                                        'Google',
-                                        style: AppTextStyles.label,
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                          OutlinedButton(
+                            onPressed: () => Get.find<AuthController>()
+                                .signInWithGoogle(),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: () => Get.find<AuthController>()
-                                      .signInWithFacebook(),
-                                  style: OutlinedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    side: BorderSide(
-                                      color: Colors.grey.shade200,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Image.asset(
-                                        "assets/facebook.png",
-                                        width: 20,
-                                        height: 20,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      const Text(
-                                        'Facebook',
-                                        style: AppTextStyles.label,
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              side: BorderSide(
+                                color: Colors.grey.shade200,
                               ),
-                            ],
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  "assets/google.png",
+                                  width: 20,
+                                  height: 20,
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'Google',
+                                  style: AppTextStyles.label,
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 16),
                         ],

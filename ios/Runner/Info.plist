@@ -25,12 +25,6 @@
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
-				<key>CFBundleURLSchemes</key>
-				<array>
-					<string>fb1543965410131033</string>
-				</array>
-			</dict>
-			<dict>
 				<key>CFBundleTypeRole</key>
 				<string>Editor</string>
 				<key>CFBundleURLSchemes</key>
@@ -43,19 +37,6 @@
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
 		<key>CLIENT_ID</key>
 		<string>745404063740-t22alce9affjoa2s3m7ga2j7o6c12j7c.apps.googleusercontent.com</string>
-		<key>FacebookAppID</key>
-		<string>1543965410131033</string>
-		<key>FacebookClientToken</key>
-		<string>9a4c0af418a7f6595d476cdb9d655f75</string>
-		<key>FacebookDisplayName</key>
-		<string>Sensational Glasses</string>
-		<key>LSApplicationQueriesSchemes</key>
-		<array>
-			<string>fbapi</string>
-			<string>fbauth2</string>
-			<string>fb-messenger-api</string>
-			<string>fbshareextension</string>
-		</array>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>MAPS_API_KEY</key>

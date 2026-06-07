@@ -74,7 +74,6 @@ repositories {
 
 dependencies {
     // Firebase BOM
-    implementation ('com.facebook.android:facebook-android-sdk:[8,9)')
     implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-analytics")

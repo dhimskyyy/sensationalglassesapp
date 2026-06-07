@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import '../app/theme/app_colors.dart';
@@ -408,7 +410,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           Center(
                             child: RichText(
                               textAlign: TextAlign.center,
-                              text: const TextSpan(
+                              text: TextSpan(
                                 text: 'Dengan mendaftar, Anda menyetujui ',
                                 style: TextStyle(
                                   color: AppColors.dark,
@@ -417,10 +419,17 @@ class _RegisterPageState extends State<RegisterPage> {
                                 children: [
                                   TextSpan(
                                     text: 'Persyaratan\n',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: AppColors.mint,
                                       fontWeight: FontWeight.w600,
                                     ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () async {
+                                        final Uri url = Uri.parse('https://www.privacypolicies.com/live/cd63d0f4-782d-404c-8b8e-b8629d30fd6b');
+                                        if (await canLaunchUrl(url)) {
+                                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                                        }
+                                      },
                                   ),
                                   TextSpan(
                                     text: 'Layanan dan ',
