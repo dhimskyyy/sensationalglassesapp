@@ -45,3 +45,6 @@ app.*.map.json
 /android/app/release
 
 **/android/key.properties
+# Secrets - never commit API keys!
+.env
+ios/Flutter/secrets.xcconfig

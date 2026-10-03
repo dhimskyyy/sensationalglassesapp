@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../screens/maps.dart';
 
 enum AlarmState { idle, loadingOn, countdown, active, loadingOff }
@@ -487,7 +488,7 @@ class HomeController extends GetxController {
       return null;
     }
     isLoadingRoute.value = true;
-    String apiKey = "AIzaSyAw_-eH3JXoXl7cTNlV4BJQ_6ugibXGEsg";
+    String apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
     PolylinePoints polylinePoints = PolylinePoints();
     PointLatLng origin = PointLatLng(originLoc.latitude, originLoc.longitude);
     PointLatLng destination = PointLatLng(latitude.value, longitude.value);
